@@ -6,6 +6,9 @@ export const navStyles: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  position: "fixed", 
+  top: 0, 
+  zIndex: 1,
 };
 
 export const drawerContentStyles: React.CSSProperties = {

@@ -15,10 +15,11 @@ import {
   DrawerBody,
   VStack,
   Link,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
-import { useColorModeValue } from "@chakra-ui/react";
 import { useRef } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
   navStyles,
   drawerContentStyles,
@@ -50,14 +51,18 @@ const Navbar = () => {
             onClick={onOpen}
             aria-label="Open Menu"
           />
-          <Image
-            src="https://static.increff.com/assets/favicon.ico?v=2"
-            boxSize="30px"
-            alt="logo"
-          />
-          <Text fontSize="lg" fontWeight="bold">
-            Release And Deployment Management
-          </Text>
+          <RouterLink to="/">
+            <Image
+              src="https://static.increff.com/assets/favicon.ico?v=2"
+              boxSize="30px"
+              alt="logo"
+            />
+          </RouterLink>
+          <RouterLink to="/">
+            <Text fontSize="lg" fontWeight="bold">
+              Release And Deployment Management
+            </Text>
+          </RouterLink>
         </HStack>
         <HStack spacing="8px" alignItems="center">
           <Text>Dark Mode</Text>
@@ -78,54 +83,47 @@ const Navbar = () => {
           <DrawerCloseButton />
           <DrawerHeader sx={drawerHeaderStyles}>Menu</DrawerHeader>
           <DrawerBody sx={drawerBodyStyles}>
-            <VStack align="start">
-              <Link
-                href="#"
-                sx={{ ...linkStyles, _hover: { textDecoration: "underline" } }}
-              >
-                Components
-              </Link>
-              <Link
-                href="#"
-                sx={{ ...linkStyles, _hover: { textDecoration: "underline" } }}
-              >
-                Clients
-              </Link>
-              <Link
-                href="#"
-                sx={{ ...linkStyles, _hover: { textDecoration: "underline" } }}
-              >
-                Releases
-              </Link>
-              <Link
-                href="#"
-                sx={{ ...linkStyles, _hover: { textDecoration: "underline" } }}
-              >
-                Deployment Groups
-              </Link>
-              <Link
-                href="#"
-                sx={{ ...linkStyles, _hover: { textDecoration: "underline" } }}
-              >
-                Deployment
-              </Link>
-              <Link
-                href="#"
-                sx={{ ...linkStyles, _hover: { textDecoration: "underline" } }}
-              >
-                DownTime
-              </Link>
-              <Link
-                href="#"
-                sx={{ ...linkStyles, _hover: { textDecoration: "underline" } }}
-              >
-                Manage Users
-              </Link>
+            <VStack align="start" width="100%">
+              <LinkWrapper href="/components">Components</LinkWrapper>
+              <LinkWrapper href="#">Clients</LinkWrapper>
+              <LinkWrapper href="#">Releases</LinkWrapper>
+              <LinkWrapper href="#">Deployment Groups</LinkWrapper>
+              <LinkWrapper href="#">Deployment</LinkWrapper>
+              <LinkWrapper href="#">DownTime</LinkWrapper>
+              <LinkWrapper href="#">Manage Users</LinkWrapper>
             </VStack>
           </DrawerBody>
         </DrawerContent>
       </Drawer>
     </>
+  );
+};
+
+const LinkWrapper = ({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) => {
+  const hoverBgColor = useColorModeValue("gray.400", "gray.200");
+
+  return (
+    <Box width="100%" _hover={{ backgroundColor: hoverBgColor }}>
+      <Link
+        href={href}
+        sx={{
+          ...linkStyles,
+          width: "100%",
+          textDecoration: "none",
+          display: "block",
+          padding: "8px",
+          _hover: { textDecoration: "none" },
+        }}
+      >
+        {children}
+      </Link>
+    </Box>
   );
 };
 
