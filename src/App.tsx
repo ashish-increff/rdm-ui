@@ -1,8 +1,8 @@
-import React from "react";
-import { Button, ButtonGroup } from "@chakra-ui/react";
+import { Grid, GridItem } from "@chakra-ui/react";
+import Navbar from "./components/Navbar";
 
 const App = () => {
-  return <Button colorScheme="blue">Button</Button>;
+  return <Navbar></Navbar>;
 };
 
 export default App;
