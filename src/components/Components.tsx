@@ -17,10 +17,7 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
-  ModalFooter,
   ModalBody,
-  ModalCloseButton,
   Tabs,
   TabList,
   TabPanels,
@@ -32,6 +29,7 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 import componentService from "../services/component-service";
 import { saveAs } from "file-saver";
+import InfoPopover from "./InfoPopover";
 
 interface Component {
   componentName: string;
@@ -104,6 +102,27 @@ const Components = () => {
     saveAs(blob, "sample-component-upload.csv");
   };
 
+  const fields = [
+    {
+      field: "Component Name",
+      dataType: "String",
+      description: "Name of the component",
+      mandatory: "Yes",
+    },
+    {
+      field: "POC Name",
+      dataType: "String",
+      description: "Name of the point of contact",
+      mandatory: "No",
+    },
+    {
+      field: "POC Email",
+      dataType: "String",
+      description: "Email of the point of contact",
+      mandatory: "No",
+    },
+  ];
+
   return (
     <Box padding="4" boxShadow="lg" bg={bgColor}>
       <HStack marginBottom="4">
@@ -131,16 +150,22 @@ const Components = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {filteredComponents.map((component, index) => (
-            <Tr key={index}>
-              <Td>{component.componentName}</Td>
-              <Td>{component.pocName ? component.pocName : "-"}</Td>
-              <Td>{component.pocEmail ? component.pocEmail : "-"}</Td>
+          {filteredComponents.length === 0 ? (
+            <Tr>
+              <Td colSpan={3}>No matching Component Found</Td>
             </Tr>
-          ))}
+          ) : (
+            filteredComponents.map((component, index) => (
+              <Tr key={index}>
+                <Td>{component.componentName}</Td>
+                <Td>{component.pocName ? component.pocName : "-"}</Td>
+                <Td>{component.pocEmail ? component.pocEmail : "-"}</Td>
+              </Tr>
+            ))
+          )}
         </Tbody>
       </Table>
-      <Modal isOpen={isOpen} onClose={handleCancel}>
+      <Modal isOpen={isOpen} onClose={handleCancel} closeOnOverlayClick={false}>
         <ModalOverlay />
         <ModalContent>
           <ModalBody>
@@ -199,9 +224,14 @@ const Components = () => {
                         borderRadius="md"
                       />
                       <Flex justifyContent="flex-end" mt={2}>
-                        <Link onClick={handleDownloadTemplate} color="teal.500">
+                        <Link
+                          onClick={handleDownloadTemplate}
+                          color="teal.500"
+                          mr={2}
+                        >
                           Download Template
                         </Link>
+                        <InfoPopover fields={fields} />
                       </Flex>
                     </FormControl>
                     <Flex mt={4} justifyContent="flex-end">
