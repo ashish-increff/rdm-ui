@@ -41,6 +41,7 @@ const Navbar = () => {
         sx={{
           ...navStyles,
           backgroundColor: colorMode === "dark" ? "gray.800" : "white",
+          zIndex: 30, // Increase the z-index to be higher
         }}
       >
         <HStack spacing="15px">

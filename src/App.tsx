@@ -5,14 +5,14 @@ import Home from "./components/Home";
 import { Component } from "react";
 import Components from "./components/Components";
 import Clients from "./components/Clients";
+import Crumb from "./components/Crumb";
 
 const App = () => {
   return (
     <>
       <Navbar></Navbar>
-
-      <Box paddingTop={{ base: "50px", md: "60px" }}>
-        {" "}
+      <Crumb></Crumb>
+      <Box paddingTop={{ base: "100px", md: "130px" }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/components" element={<Components />} />
