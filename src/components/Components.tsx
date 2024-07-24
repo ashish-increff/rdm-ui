@@ -25,11 +25,14 @@ import {
   TabPanel,
   Flex,
   Link,
+  VStack,
+  Heading,
 } from "@chakra-ui/react";
 import { useForm, useWatch } from "react-hook-form";
 import componentService from "../services/component-service";
 import { saveAs } from "file-saver";
 import InfoPopover from "./InfoPopover";
+import { bulkUploadComponentFields } from "./InformativeFields";
 
 interface Component {
   componentName: string;
@@ -41,6 +44,8 @@ const Components = () => {
   const [components, setComponents] = useState<Component[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -103,27 +108,6 @@ const Components = () => {
     saveAs(blob, "sample-component-upload.csv");
   };
 
-  const fields = [
-    {
-      field: "Component Name",
-      dataType: "String",
-      description: "Name of the component",
-      mandatory: "Yes",
-    },
-    {
-      field: "POC Name",
-      dataType: "String",
-      description: "Name of the point of contact",
-      mandatory: "No",
-    },
-    {
-      field: "POC Email",
-      dataType: "String",
-      description: "Email of the point of contact",
-      mandatory: "No",
-    },
-  ];
-
   return (
     <Box padding="4" boxShadow="lg" bg={bgColor}>
       <HStack marginBottom="4">
@@ -178,76 +162,110 @@ const Components = () => {
 
               <TabPanels>
                 <TabPanel>
-                  <form onSubmit={handleSubmit(onSubmit)}>
-                    <FormControl isRequired isInvalid={!!errors.componentName}>
-                      <FormLabel>Component Name</FormLabel>
-                      <Input
-                        {...register("componentName", { required: true })}
-                        autoComplete="off"
-                      />
-                      <FormErrorMessage>
-                        {errors.componentName && "Component Name is required"}
-                      </FormErrorMessage>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>POC Name</FormLabel>
-                      <Input {...register("pocName")} autoComplete="off" />
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>POC Email</FormLabel>
-                      <Input {...register("pocEmail")} autoComplete="off" />
-                    </FormControl>
-                    <HStack justifyContent="flex-end" mt={4}>
-                      <Button colorScheme="gray" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                      <Button
-                        colorScheme="blue"
-                        type="submit"
-                        disabled={!componentName}
+                  <Box
+                    maxW="md"
+                    mx="auto"
+                    p={6}
+                    borderWidth={1}
+                    borderRadius="lg"
+                    boxShadow="lg"
+                  >
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                      <FormControl
+                        isRequired
+                        isInvalid={!!errors.componentName}
+                        mb={4}
                       >
-                        Submit
-                      </Button>
-                    </HStack>
-                  </form>
-                </TabPanel>
-                <TabPanel p={4}>
-                  <form>
-                    <FormControl mt={4}>
-                      <FormLabel fontSize="lg" fontWeight="bold">
-                        Upload Component(s)
-                      </FormLabel>
-                      <Input
-                        type="file"
-                        accept=".csv"
-                        p={1}
-                        borderColor="gray.300"
-                        borderRadius="md"
-                      />
-                      <Flex
-                        justifyContent="flex-end"
-                        alignItems="center"
-                        mt={2}
-                      >
-                        <Link
-                          onClick={handleDownloadTemplate}
-                          color="teal.500"
-                          mr={2}
+                        <FormLabel>Component Name</FormLabel>
+                        <Input
+                          {...register("componentName", { required: true })}
+                          autoComplete="off"
+                        />
+                        <FormErrorMessage>
+                          {errors.componentName && "Component Name is required"}
+                        </FormErrorMessage>
+                      </FormControl>
+                      <FormControl mb={4}>
+                        <FormLabel>POC Name</FormLabel>
+                        <Input {...register("pocName")} autoComplete="off" />
+                      </FormControl>
+                      <FormControl mb={4}>
+                        <FormLabel>POC Email</FormLabel>
+                        <Input {...register("pocEmail")} autoComplete="off" />
+                      </FormControl>
+                      <HStack justifyContent="flex-end" mt={4}>
+                        <Button colorScheme="gray" onClick={handleCancel}>
+                          Cancel
+                        </Button>
+                        <Button
+                          colorScheme="blue"
+                          type="submit"
+                          isDisabled={!componentName}
                         >
-                          Download Template
-                        </Link>
-                        <InfoPopover fields={fields} color="teal.500" />
+                          Submit
+                        </Button>
+                      </HStack>
+                    </form>
+                  </Box>
+                </TabPanel>
+                <TabPanel>
+                  <Box
+                    maxW="md"
+                    mx="auto"
+                    p={6}
+                    borderWidth={1}
+                    borderRadius="lg"
+                    boxShadow="lg"
+                  >
+                    <VStack spacing={4} align="stretch">
+                      <Heading as="h3" size="sm">
+                        Upload Component(s)
+                      </Heading>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept=".csv"
+                          p={1}
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          onChange={(event) =>
+                            setSelectedFile(
+                              event.target.files ? event.target.files[0] : null
+                            )
+                          }
+                        />
+                        <Flex
+                          justifyContent="flex-end"
+                          alignItems="center"
+                          mt={2}
+                        >
+                          <Link
+                            onClick={handleDownloadTemplate}
+                            color="teal.500"
+                            marginRight="2"
+                          >
+                            Download Template
+                          </Link>
+                          <InfoPopover
+                            fields={bulkUploadComponentFields}
+                            color="teal.500"
+                          />
+                        </Flex>
+                      </FormControl>
+                      <Flex justifyContent="flex-end" mt={4}>
+                        <Button colorScheme="gray" onClick={handleCancel}>
+                          Cancel
+                        </Button>
+                        <Button
+                          colorScheme="blue"
+                          ml={4}
+                          isDisabled={!selectedFile}
+                        >
+                          Upload
+                        </Button>
                       </Flex>
-                    </FormControl>
-                    <Flex mt={4} justifyContent="flex-end">
-                      <Button colorScheme="gray" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                      <Button colorScheme="blue" ml={4}>
-                        Upload
-                      </Button>
-                    </Flex>
-                  </form>
+                    </VStack>
+                  </Box>
                 </TabPanel>
               </TabPanels>
             </Tabs>
