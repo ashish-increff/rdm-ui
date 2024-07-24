@@ -26,6 +26,10 @@ class HttpService {
   create<T>(entity: T) {
     return apiClient.post(this.endpoint, entity);
   }
+  
+  bulkCreate<T>(entities: T[]) {
+    return apiClient.post(this.endpoint, entities);
+  }
 
   update<T extends Entity>(entity: T) {
     return apiClient.patch(this.endpoint + "/" + entity.id, entity);

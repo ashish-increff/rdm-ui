@@ -67,6 +67,9 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     if (label === "Components") {
       navigate("/components");
     }
+    if (label === "Clients") {
+      navigate("/clients");
+    }
     // Add more routes here if needed
   };
 

@@ -14,7 +14,7 @@ import {
   DrawerHeader,
   DrawerBody,
   VStack,
-  Link,
+  Link as ChakraLink,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
@@ -84,13 +84,27 @@ const Navbar = () => {
           <DrawerHeader sx={drawerHeaderStyles}>Menu</DrawerHeader>
           <DrawerBody sx={drawerBodyStyles}>
             <VStack align="start" width="100%">
-              <LinkWrapper href="/components">Components</LinkWrapper>
-              <LinkWrapper href="#">Clients</LinkWrapper>
-              <LinkWrapper href="#">Releases</LinkWrapper>
-              <LinkWrapper href="#">Deployment Groups</LinkWrapper>
-              <LinkWrapper href="#">Deployment</LinkWrapper>
-              <LinkWrapper href="#">DownTime</LinkWrapper>
-              <LinkWrapper href="#">Manage Users</LinkWrapper>
+              <LinkWrapper to="/components" onClose={onClose}>
+                Components
+              </LinkWrapper>
+              <LinkWrapper to="/clients" onClose={onClose}>
+                Clients
+              </LinkWrapper>
+              <LinkWrapper to="/releases" onClose={onClose}>
+                Releases
+              </LinkWrapper>
+              <LinkWrapper to="/deployment-groups" onClose={onClose}>
+                Deployment Groups
+              </LinkWrapper>
+              <LinkWrapper to="/deployment" onClose={onClose}>
+                Deployment
+              </LinkWrapper>
+              <LinkWrapper to="/downtime" onClose={onClose}>
+                DownTime
+              </LinkWrapper>
+              <LinkWrapper to="/manage-users" onClose={onClose}>
+                Manage Users
+              </LinkWrapper>
             </VStack>
           </DrawerBody>
         </DrawerContent>
@@ -100,18 +114,22 @@ const Navbar = () => {
 };
 
 const LinkWrapper = ({
-  href,
+  to,
   children,
+  onClose,
 }: {
-  href: string;
+  to: string;
   children: React.ReactNode;
+  onClose: () => void;
 }) => {
   const hoverBgColor = useColorModeValue("gray.400", "gray.200");
 
   return (
     <Box width="100%" _hover={{ backgroundColor: hoverBgColor }}>
-      <Link
-        href={href}
+      <ChakraLink
+        as={RouterLink}
+        to={to}
+        onClick={onClose}
         sx={{
           ...linkStyles,
           width: "100%",
@@ -122,7 +140,7 @@ const LinkWrapper = ({
         }}
       >
         {children}
-      </Link>
+      </ChakraLink>
     </Box>
   );
 };

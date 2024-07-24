@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Home from "./components/Home";
 import { Component } from "react";
 import Components from "./components/Components";
+import Clients from "./components/Clients";
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/components" element={<Components />} />
+          <Route path="/clients" element={<Clients />} />
         </Routes>
       </Box>
     </>
