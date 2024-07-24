@@ -21,9 +21,17 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Flex,
+  Link,
 } from "@chakra-ui/react";
 import { useForm, useWatch } from "react-hook-form";
 import componentService from "../services/component-service";
+import { saveAs } from "file-saver";
 
 interface Component {
   componentName: string;
@@ -61,6 +69,8 @@ const Components = () => {
 
   const bgColor = useColorModeValue("white", "gray.800");
   const colorScheme = useColorModeValue("blue", "teal");
+  const inputColor = useColorModeValue("black", "white");
+  const placeholderColor = useColorModeValue("gray.500", "gray.300");
 
   const filteredComponents = components.filter((component) =>
     component.componentName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -88,14 +98,25 @@ const Components = () => {
     defaultValue: "",
   });
 
+  const handleDownloadTemplate = () => {
+    const dummyData = "Component Name,Poc Name,Poc Email\n";
+    const blob = new Blob([dummyData], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "sample-component-upload.csv");
+  };
+
   return (
     <Box padding="4" boxShadow="lg" bg={bgColor}>
       <HStack marginBottom="4">
         <Input
           placeholder="Search Component"
-          maxW="300px"
+          maxW="250px"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
+          sx={{
+            "::placeholder": {
+              color: placeholderColor,
+            },
+          }}
         />
         <Button colorScheme="blue" onClick={() => setIsOpen(true)}>
           Add Component
@@ -122,38 +143,79 @@ const Components = () => {
       <Modal isOpen={isOpen} onClose={handleCancel}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Add Component</ModalHeader>
-          <ModalCloseButton />
           <ModalBody>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <FormControl isRequired isInvalid={!!errors.componentName}>
-                <FormLabel>Component Name</FormLabel>
-                <Input {...register("componentName", { required: true })} />
-                <FormErrorMessage>
-                  {errors.componentName && "Component Name is required"}
-                </FormErrorMessage>
-              </FormControl>
-              <FormControl>
-                <FormLabel>POC Name</FormLabel>
-                <Input {...register("pocName")} />
-              </FormControl>
-              <FormControl>
-                <FormLabel>POC Email</FormLabel>
-                <Input {...register("pocEmail")} />
-              </FormControl>
-              <HStack justifyContent="flex-end" mt={4}>
-                <Button colorScheme="gray" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button
-                  colorScheme="blue"
-                  type="submit"
-                  disabled={!componentName}
-                >
-                  Submit
-                </Button>
-              </HStack>
-            </form>
+            <Tabs>
+              <TabList>
+                <Tab>Add New Component</Tab>
+                <Tab>Bulk Upload</Tab>
+              </TabList>
+
+              <TabPanels>
+                <TabPanel>
+                  <form onSubmit={handleSubmit(onSubmit)}>
+                    <FormControl isRequired isInvalid={!!errors.componentName}>
+                      <FormLabel>Component Name</FormLabel>
+                      <Input
+                        {...register("componentName", { required: true })}
+                        autoComplete="off"
+                      />
+                      <FormErrorMessage>
+                        {errors.componentName && "Component Name is required"}
+                      </FormErrorMessage>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>POC Name</FormLabel>
+                      <Input {...register("pocName")} autoComplete="off" />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>POC Email</FormLabel>
+                      <Input {...register("pocEmail")} autoComplete="off" />
+                    </FormControl>
+                    <HStack justifyContent="flex-end" mt={4}>
+                      <Button colorScheme="gray" onClick={handleCancel}>
+                        Cancel
+                      </Button>
+                      <Button
+                        colorScheme="blue"
+                        type="submit"
+                        disabled={!componentName}
+                      >
+                        Submit
+                      </Button>
+                    </HStack>
+                  </form>
+                </TabPanel>
+                <TabPanel p={4}>
+                  <form>
+                    <FormControl mt={4}>
+                      <FormLabel fontSize="lg" fontWeight="bold">
+                        Upload Component(s)
+                      </FormLabel>
+                      <Input
+                        type="file"
+                        accept=".csv"
+                        p={1}
+                        borderColor="gray.300"
+                        borderRadius="md"
+                      />
+                      <Flex justifyContent="flex-end" mt={2}>
+                        <Link onClick={handleDownloadTemplate} color="teal.500">
+                          Download Template
+                        </Link>
+                      </Flex>
+                    </FormControl>
+                    <Flex mt={4} justifyContent="flex-end">
+                      <Button colorScheme="gray" onClick={handleCancel}>
+                        Cancel
+                      </Button>
+                      <Button colorScheme="blue" ml={4}>
+                        Upload
+                      </Button>
+                    </Flex>
+                  </form>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </ModalBody>
         </ModalContent>
       </Modal>

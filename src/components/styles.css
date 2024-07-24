@@ -1,0 +1,31 @@
+.input-field {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  
+  .form-input {
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+  }
+  
+  .form-label {
+    position: absolute;
+    top: 0.5rem;
+    left: 0;
+    font-size: 1rem;
+    transition: 0.2s ease all;
+    pointer-events: none;
+    color: #9b9b9b;
+  }
+  
+  .form-input:focus + .form-label,
+  .form-input:not(:placeholder-shown) + .form-label {
+    top: -0.5rem;
+    font-size: 0.75rem;
+    color: #3182ce; /* Adjust the color as per your theme */
+  }
+  
