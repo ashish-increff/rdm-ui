@@ -26,14 +26,18 @@ interface InfoPopoverProps {
     description: string;
     mandatory: string;
   }[];
+  color?: string; // Optional color prop
 }
 
-const InfoPopover: React.FC<InfoPopoverProps> = ({ fields }) => {
+const InfoPopover: React.FC<InfoPopoverProps> = ({
+  fields,
+  color = "teal.500",
+}) => {
   return (
     <Popover placement="bottom-start" closeOnBlur={true}>
       <PopoverTrigger>
-        <Button variant="ghost">
-          <InfoOutlineIcon />
+        <Button variant="ghost" p={0} minW={0}>
+          <InfoOutlineIcon color={color} />
         </Button>
       </PopoverTrigger>
       <PopoverContent width="auto">

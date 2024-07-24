@@ -97,7 +97,8 @@ const Components = () => {
   });
 
   const handleDownloadTemplate = () => {
-    const dummyData = "Component Name,Poc Name,Poc Email\n";
+    const dummyData =
+      "componentName,pocName,pocEmail\nMANDATORY\nCOMPONENT_NAME,POC_NAME,POC_EMAIL";
     const blob = new Blob([dummyData], { type: "text/csv;charset=utf-8;" });
     saveAs(blob, "sample-component-upload.csv");
   };
@@ -223,7 +224,11 @@ const Components = () => {
                         borderColor="gray.300"
                         borderRadius="md"
                       />
-                      <Flex justifyContent="flex-end" mt={2}>
+                      <Flex
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        mt={2}
+                      >
                         <Link
                           onClick={handleDownloadTemplate}
                           color="teal.500"
@@ -231,7 +236,7 @@ const Components = () => {
                         >
                           Download Template
                         </Link>
-                        <InfoPopover fields={fields} />
+                        <InfoPopover fields={fields} color="teal.500" />
                       </Flex>
                     </FormControl>
                     <Flex mt={4} justifyContent="flex-end">
