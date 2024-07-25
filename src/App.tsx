@@ -6,6 +6,7 @@ import { Component } from "react";
 import Components from "./components/Components";
 import Clients from "./components/Clients";
 import Crumb from "./components/Crumb";
+import Releases from "./components/Releases";
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/components" element={<Components />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/releases" element={<Releases />} />
         </Routes>
       </Box>
     </>

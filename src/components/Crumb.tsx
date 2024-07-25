@@ -22,6 +22,7 @@ const Crumb = () => {
   const routeMapping: { [key: string]: string } = {
     components: "Components",
     clients: "Clients",
+    releases: "Releases",
     // Add more mappings as needed
   };
 

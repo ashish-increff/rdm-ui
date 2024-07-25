@@ -1,4 +1,3 @@
-// Components.js
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -29,7 +28,9 @@ import {
   VStack,
   Heading,
   Text,
+  IconButton,
 } from "@chakra-ui/react";
+import { FaEdit } from "react-icons/fa";
 import { useForm, useWatch } from "react-hook-form";
 import componentService from "../services/component-service";
 import { saveAs } from "file-saver";
@@ -51,6 +52,9 @@ const Clients = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [uploadDisabled, setUploadDisabled] = useState(true);
+  const [selectedComponent, setSelectedComponent] = useState<Component | null>(
+    null
+  ); // State for selected component
 
   const {
     register,
@@ -100,28 +104,49 @@ const Clients = () => {
     };
 
     try {
-      await componentService.bulkCreate([formattedData]);
+      if (selectedComponent) {
+        // If editing, update the component
+        await componentService.testUpdate(formattedData);
+        ToastManager.success(
+          "Component Updated",
+          "Successfully updated the component."
+        );
+      } else {
+        // If adding new, create the component
+        await componentService.bulkCreate([formattedData]);
+        ToastManager.success(
+          "Component Added",
+          "Successfully added new component."
+        );
+      }
       fetchComponents();
-      setIsOpen(false);
-      reset();
-      ToastManager.success(
-        "Component Added",
-        "Successfully added new component."
-      );
+      handleCancel(); // Call handleCancel to reset the form and close the modal
     } catch (error) {
       console.error(error);
       const err = error as any;
       const errorMessage = err.response?.data?.message || err.message;
-      ToastManager.error("Error Adding Component", errorMessage);
+      ToastManager.error(
+        selectedComponent
+          ? "Error Updating Component"
+          : "Error Adding Component",
+        errorMessage
+      );
     }
   };
 
   const handleCancel = () => {
     setIsOpen(false);
-    reset();
+    reset(); // Reset form fields
     setSelectedFile(null); // Clear selected file
     setFileErrors([]); // Clear file errors
     setUploadDisabled(true); // Reset upload button state
+    setSelectedComponent(null); // Reset selected component
+  };
+
+  const handleAddClick = () => {
+    reset({ componentName: "", pocName: "", pocEmail: "" });
+    setSelectedComponent(null);
+    setIsOpen(true);
   };
 
   const componentName = useWatch({
@@ -184,14 +209,11 @@ const Clients = () => {
             }));
             await componentService.bulkCreate(components);
             fetchComponents();
-            setIsOpen(false);
-            setSelectedFile(null);
-            setFileErrors([]);
-            setUploadDisabled(true);
+            handleCancel(); // Call handleCancel to reset the form and close the modal
             ToastManager.success(
               "Components Added",
               "Successfully added new components."
-            ); // Reset state after successful upload
+            );
           } catch (error) {
             console.error(error);
             setFileErrors([(error as Error).message]);
@@ -216,6 +238,12 @@ const Clients = () => {
     });
   };
 
+  const handleEditClick = (component: Component) => {
+    setSelectedComponent(component);
+    reset(component);
+    setIsOpen(true);
+  };
+
   return (
     <Box padding="4" boxShadow="lg" bg={bgColor}>
       <HStack marginBottom="4">
@@ -230,7 +258,7 @@ const Clients = () => {
             },
           }}
         />
-        <Button colorScheme="blue" onClick={() => setIsOpen(true)}>
+        <Button colorScheme="blue" onClick={handleAddClick}>
           Add Component
         </Button>
       </HStack>
@@ -261,12 +289,13 @@ const Clients = () => {
             <Th fontWeight="bold">Component Name</Th>
             <Th fontWeight="bold">POC Name</Th>
             <Th fontWeight="bold">POC Email</Th>
+            <Th fontWeight="bold">Actions</Th>
           </Tr>
         </Thead>
         <Tbody>
           {filteredComponents.length === 0 ? (
             <Tr>
-              <Td colSpan={3}>No matching Component Found</Td>
+              <Td colSpan={4}>No matching Component Found</Td>
             </Tr>
           ) : (
             filteredComponents.map((component, index) => (
@@ -274,6 +303,15 @@ const Clients = () => {
                 <Td>{component.componentName}</Td>
                 <Td>{component.pocName ? component.pocName : "-"}</Td>
                 <Td>{component.pocEmail ? component.pocEmail : "-"}</Td>
+                <Td>
+                  <IconButton
+                    size="sm"
+                    colorScheme="blue"
+                    aria-label="Edit"
+                    icon={<FaEdit />}
+                    onClick={() => handleEditClick(component)} // Handle edit click
+                  />
+                </Td>
               </Tr>
             ))
           )}
@@ -285,8 +323,10 @@ const Clients = () => {
           <ModalBody>
             <Tabs>
               <TabList>
-                <Tab>Add New Component</Tab>
-                <Tab>Bulk Upload</Tab>
+                <Tab>
+                  {selectedComponent ? "Edit Component" : "Add New Component"}
+                </Tab>
+                {!selectedComponent && <Tab>Bulk Upload</Tab>}
               </TabList>
 
               <TabPanels>
@@ -309,6 +349,7 @@ const Clients = () => {
                         <Input
                           {...register("componentName", { required: true })}
                           autoComplete="off"
+                          isDisabled={!!selectedComponent} // Disable if editing
                         />
                         <FormErrorMessage>
                           {errors.componentName && "Component Name is required"}
@@ -337,84 +378,88 @@ const Clients = () => {
                     </form>
                   </Box>
                 </TabPanel>
-                <TabPanel>
-                  <Box
-                    maxW="md"
-                    mx="auto"
-                    p={6}
-                    borderWidth={1}
-                    borderRadius="lg"
-                    boxShadow="lg"
-                  >
-                    <VStack spacing={4} align="stretch">
-                      <Heading as="h3" size="sm">
-                        Upload Component(s)
-                      </Heading>
-                      <FormControl>
-                        <Input
-                          type="file"
-                          accept=".csv"
-                          p={1}
-                          borderColor="gray.300"
-                          borderRadius="md"
-                          onClick={(event) => {
-                            // This will clear the previous file as soon as the file input is clicked
-                            event.currentTarget.value = "";
-                          }}
-                          onChange={(event) => {
-                            setSelectedFile(
-                              event.target.files ? event.target.files[0] : null
-                            );
-                            setFileErrors([]); // Clear errors when new file is selected
-                          }}
-                        />
-                        <Flex
-                          justifyContent="flex-end"
-                          alignItems="center"
-                          mt={2}
-                        >
-                          <Link
-                            onClick={handleDownloadTemplate}
-                            color="teal.500"
-                            marginRight="2"
-                          >
-                            Download Template
-                          </Link>
-                          <InfoPopover
-                            fields={bulkUploadComponentFields}
-                            color="teal.500"
+                {!selectedComponent && (
+                  <TabPanel>
+                    <Box
+                      maxW="md"
+                      mx="auto"
+                      p={6}
+                      borderWidth={1}
+                      borderRadius="lg"
+                      boxShadow="lg"
+                    >
+                      <VStack spacing={4} align="stretch">
+                        <Heading as="h3" size="sm">
+                          Upload Component(s)
+                        </Heading>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept=".csv"
+                            p={1}
+                            borderColor="gray.300"
+                            borderRadius="md"
+                            onClick={(event) => {
+                              // This will clear the previous file as soon as the file input is clicked
+                              event.currentTarget.value = "";
+                            }}
+                            onChange={(event) => {
+                              setSelectedFile(
+                                event.target.files
+                                  ? event.target.files[0]
+                                  : null
+                              );
+                              setFileErrors([]); // Clear errors when new file is selected
+                            }}
                           />
-                        </Flex>
-                      </FormControl>
-                      {fileErrors.length > 0 && (
-                        <Box mt={4} color="red.500">
-                          <Text fontWeight="bold">
-                            Note: After fixing problems, please re-attach the
-                            file again
-                          </Text>
-                          <Box mt={2}>
-                            {fileErrors.map((error, index) => (
-                              <Text key={index}>{error}</Text>
-                            ))}
+                          <Flex
+                            justifyContent="flex-end"
+                            alignItems="center"
+                            mt={2}
+                          >
+                            <Link
+                              onClick={handleDownloadTemplate}
+                              color="teal.500"
+                              marginRight="2"
+                            >
+                              Download Template
+                            </Link>
+                            <InfoPopover
+                              fields={bulkUploadComponentFields}
+                              color="teal.500"
+                            />
+                          </Flex>
+                        </FormControl>
+                        {fileErrors.length > 0 && (
+                          <Box mt={4} color="red.500">
+                            <Text fontWeight="bold">
+                              Note: After fixing problems, please re-attach the
+                              file again
+                            </Text>
+                            <Box mt={2}>
+                              {fileErrors.map((error, index) => (
+                                <Text key={index}>{error}</Text>
+                              ))}
+                            </Box>
                           </Box>
-                        </Box>
-                      )}
-                      <Flex justifyContent="flex-end" mt={4}>
-                        <Button colorScheme="gray" onClick={handleCancel}>
-                          Cancel
-                        </Button>
-                        <Button
-                          colorScheme="blue"
-                          ml={4}
-                          isDisabled={uploadDisabled} // Disable based on the state
-                          onClick={handleFileUpload}
-                        >
-                          Upload
-                        </Button>
-                      </Flex>
-                    </VStack>
-                  </Box>
-                </TabPanel>
+                        )}
+                        <Flex justifyContent="flex-end" mt={4}>
+                          <Button colorScheme="gray" onClick={handleCancel}>
+                            Cancel
+                          </Button>
+                          <Button
+                            colorScheme="blue"
+                            ml={4}
+                            isDisabled={uploadDisabled} // Disable based on the state
+                            onClick={handleFileUpload}
+                          >
+                            Upload
+                          </Button>
+                        </Flex>
+                      </VStack>
+                    </Box>
+                  </TabPanel>
+                )}
               </TabPanels>
             </Tabs>
           </ModalBody>

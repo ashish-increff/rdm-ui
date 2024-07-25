@@ -295,7 +295,7 @@ const Components = () => {
         <Tbody>
           {filteredComponents.length === 0 ? (
             <Tr>
-              <Td colSpan={3}>No matching Component Found</Td>
+              <Td colSpan={4}>No matching Component Found</Td>
             </Tr>
           ) : (
             filteredComponents.map((component, index) => (

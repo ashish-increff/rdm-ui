@@ -34,7 +34,20 @@ class HttpService {
   update<T extends Entity>(entity: T) {
     return apiClient.patch(this.endpoint + "/" + entity.id, entity);
   }
+
+  testUpdate<T>(entity: T) {
+    return apiClient.put(this.endpoint, entity);
+  }
+  
+  getByComponentName<T>(componentName: string) {
+    return apiClient.get<T>(this.endpoint, {
+      params: {
+        componentName: componentName
+      }
+    });
+  }
 }
+
 
 const create = (endpoint: string) => new HttpService(endpoint);
 
