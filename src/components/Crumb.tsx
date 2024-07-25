@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link as RouterLink } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,12 +32,12 @@ const Crumb = () => {
   return (
     <Box
       position="fixed" // Make the Crumb fixed
-      top="60px" // Position it below the Navbar
+      top="50px" // Position it below the Navbar
       width="100%"
       zIndex="20" // Ensure it’s above the Navbar
       marginBottom="10px" // Reduced space below the Crumb
       shadow="md" // Add shadow
-      padding="4" // Reduced padding inside the Box
+      padding="3" // Reduced padding inside the Box
       borderRadius="md"
       bg={bgColor}
       color={color}
@@ -50,13 +50,15 @@ const Crumb = () => {
       >
         {pathnames.length > 0 ? (
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">
+            <BreadcrumbLink as={RouterLink} to="/">
               <Icon as={MdHome} boxSize="6" color="blue" />
             </BreadcrumbLink>
           </BreadcrumbItem>
         ) : (
           <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            <BreadcrumbLink as={RouterLink} to="/">
+              Home
+            </BreadcrumbLink>
           </BreadcrumbItem>
         )}
         {pathnames.map((value, index) => {
@@ -72,7 +74,9 @@ const Crumb = () => {
             </BreadcrumbItem>
           ) : (
             <BreadcrumbItem key={to}>
-              <BreadcrumbLink href={to}>{displayName}</BreadcrumbLink>
+              <BreadcrumbLink as={RouterLink} to={to}>
+                {displayName}
+              </BreadcrumbLink>
             </BreadcrumbItem>
           );
         })}

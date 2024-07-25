@@ -52,7 +52,10 @@ const Home: React.FC = () => {
         />
         <Section
           title="Admin"
-          items={[{ label: "Manage Users", icon: "👤" }]}
+          items={[
+            { label: "Manage Users", icon: "👤" },
+            { label: "Audit Log", icon: "📝" },
+          ]}
           color="orange.500"
         />
       </VStack>

@@ -1,3 +1,4 @@
+// Components.js
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -35,6 +36,7 @@ import { saveAs } from "file-saver";
 import Papa from "papaparse";
 import InfoPopover from "./InfoPopover";
 import { bulkUploadComponentFields } from "./InformativeFields";
+import ToastManager from "../utils/ToastManager"; // Import the ToastManager
 
 interface Component {
   componentName: string;
@@ -67,6 +69,7 @@ const Components = () => {
       setComponents(response.data);
     } catch (error) {
       console.error(error);
+      ToastManager.error("Error Loading Components", (error as Error).message);
     }
   };
 
@@ -89,13 +92,27 @@ const Components = () => {
   );
 
   const onSubmit = async (data: Component) => {
+    // Convert empty strings to null
+    const formattedData = {
+      ...data,
+      pocName: data.pocName || null,
+      pocEmail: data.pocEmail || null,
+    };
+
     try {
-      await componentService.bulkCreate([data]);
+      await componentService.bulkCreate([formattedData]);
       fetchComponents();
       setIsOpen(false);
       reset();
+      ToastManager.success(
+        "Component Added",
+        "Successfully added new component."
+      );
     } catch (error) {
       console.error(error);
+      const err = error as any;
+      const errorMessage = err.response?.data?.message || err.message;
+      ToastManager.error("Error Adding Component", errorMessage);
     }
   };
 
@@ -162,18 +179,26 @@ const Components = () => {
           try {
             const components = data.map((row: any) => ({
               componentName: row.componentName,
-              pocName: row.pocName,
-              pocEmail: row.pocEmail,
+              pocName: row.pocName || null,
+              pocEmail: row.pocEmail || null,
             }));
             await componentService.bulkCreate(components);
             fetchComponents();
             setIsOpen(false);
             setSelectedFile(null);
             setFileErrors([]);
-            setUploadDisabled(true); // Reset state after successful upload
+            setUploadDisabled(true);
+            ToastManager.success(
+              "Components Added",
+              "Successfully added new components."
+            ); // Reset state after successful upload
           } catch (error) {
             console.error(error);
             setFileErrors([(error as Error).message]);
+            ToastManager.error(
+              "Error Uploading File",
+              (error as Error).message
+            );
           }
         }
       },
@@ -186,6 +211,7 @@ const Components = () => {
         }
         setFileErrors([errorMessage]);
         setUploadDisabled(true); // Disable upload on error
+        ToastManager.error("Error Parsing File", errorMessage);
       },
     });
   };
@@ -208,7 +234,28 @@ const Components = () => {
           Add Component
         </Button>
       </HStack>
-      <Table variant="striped" colorScheme={colorScheme}>
+      <Table
+        colorScheme={colorScheme}
+        sx={{
+          "th, td": {
+            borderBottom: "1px solid",
+            borderColor: useColorModeValue("gray.200", "gray.700"),
+            padding: "8px",
+          },
+          th: {
+            backgroundColor: useColorModeValue("gray.100", "gray.900"),
+            color: useColorModeValue("gray.800", "gray.100"),
+          },
+          tr: {
+            "&:nth-of-type(even)": {
+              backgroundColor: useColorModeValue("gray.50", "gray.800"),
+            },
+          },
+          "tr:hover": {
+            backgroundColor: useColorModeValue("gray.200", "gray.700"),
+          },
+        }}
+      >
         <Thead>
           <Tr>
             <Th fontWeight="bold">Component Name</Th>
@@ -310,6 +357,10 @@ const Components = () => {
                           p={1}
                           borderColor="gray.300"
                           borderRadius="md"
+                          onClick={(event) => {
+                            // This will clear the previous file as soon as the file input is clicked
+                            event.currentTarget.value = "";
+                          }}
                           onChange={(event) => {
                             setSelectedFile(
                               event.target.files ? event.target.files[0] : null

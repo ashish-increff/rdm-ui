@@ -28,7 +28,6 @@ export const drawerBodyStyles: React.CSSProperties = {
 };
 
 export const linkStyles: React.CSSProperties = {
-  color: "teal.700",
   fontWeight: "bold",
   textDecoration: "none",
 };

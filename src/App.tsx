@@ -12,7 +12,7 @@ const App = () => {
     <>
       <Navbar></Navbar>
       <Crumb></Crumb>
-      <Box paddingTop={{ base: "100px", md: "130px" }}>
+      <Box paddingTop={{ base: "100px", md: "110px" }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/components" element={<Components />} />

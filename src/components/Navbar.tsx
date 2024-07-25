@@ -45,28 +45,34 @@ const Navbar = () => {
         }}
       >
         <HStack spacing="15px">
+          {" "}
+          {/* Reduced spacing */}
           <IconButton
             icon={<HamburgerIcon />}
             variant="outline"
             ref={btnRef}
             onClick={onOpen}
             aria-label="Open Menu"
+            size="sm"
           />
           <RouterLink to="/">
             <Image
               src="https://static.increff.com/assets/favicon.ico?v=2"
-              boxSize="30px"
+              boxSize="25px"
               alt="logo"
             />
           </RouterLink>
           <RouterLink to="/">
             <Text fontSize="lg" fontWeight="bold">
+              {" "}
               Release And Deployment Management
             </Text>
           </RouterLink>
         </HStack>
-        <HStack spacing="8px" alignItems="center">
-          <Text>Dark Mode</Text>
+        <HStack spacing="5px" alignItems="center">
+          {" "}
+          {/* Reduced spacing */}
+          <Text fontSize="sm">Dark Mode</Text> {/* Reduced fontSize */}
           <Switch isChecked={colorMode === "dark"} onChange={toggleColorMode} />
         </HStack>
       </Box>
@@ -82,29 +88,40 @@ const Navbar = () => {
           sx={{ ...drawerContentStyles, backgroundColor: drawerContentBg }}
         >
           <DrawerCloseButton />
-          <DrawerHeader sx={drawerHeaderStyles}>Menu</DrawerHeader>
+          <DrawerHeader sx={drawerHeaderStyles}>All Screens</DrawerHeader>
           <DrawerBody sx={drawerBodyStyles}>
             <VStack align="start" width="100%">
-              <LinkWrapper to="/components" onClose={onClose}>
+              <LinkWrapper to="/components" onClose={onClose} color="red.500">
                 Components
               </LinkWrapper>
-              <LinkWrapper to="/clients" onClose={onClose}>
+              <LinkWrapper to="/clients" onClose={onClose} color="red.500">
                 Clients
               </LinkWrapper>
-              <LinkWrapper to="/releases" onClose={onClose}>
+              <LinkWrapper to="/releases" onClose={onClose} color="green.500">
                 Releases
               </LinkWrapper>
-              <LinkWrapper to="/deployment-groups" onClose={onClose}>
+              <LinkWrapper
+                to="/deployment-groups"
+                onClose={onClose}
+                color="green.500"
+              >
                 Deployment Groups
               </LinkWrapper>
-              <LinkWrapper to="/deployment" onClose={onClose}>
+              <LinkWrapper to="/deployment" onClose={onClose} color="blue.500">
                 Deployment
               </LinkWrapper>
-              <LinkWrapper to="/downtime" onClose={onClose}>
+              <LinkWrapper to="/downtime" onClose={onClose} color="purple.500">
                 DownTime
               </LinkWrapper>
-              <LinkWrapper to="/manage-users" onClose={onClose}>
+              <LinkWrapper
+                to="/manage-users"
+                onClose={onClose}
+                color="orange.500"
+              >
                 Manage Users
+              </LinkWrapper>
+              <LinkWrapper to="/audit-log" onClose={onClose} color="orange.500">
+                Audit Log
               </LinkWrapper>
             </VStack>
           </DrawerBody>
@@ -118,10 +135,12 @@ const LinkWrapper = ({
   to,
   children,
   onClose,
+  color,
 }: {
   to: string;
   children: React.ReactNode;
   onClose: () => void;
+  color: string;
 }) => {
   const hoverBgColor = useColorModeValue("gray.400", "gray.200");
 
@@ -131,6 +150,7 @@ const LinkWrapper = ({
         as={RouterLink}
         to={to}
         onClick={onClose}
+        color={color}
         sx={{
           ...linkStyles,
           width: "100%",
