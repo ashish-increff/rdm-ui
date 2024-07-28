@@ -47,12 +47,12 @@ const Crumb = () => {
         spacing="4px" // Reduced spacing between items
         separator="/" // Use "/" as the separator
         fontSize={breadcrumbFontSize} // Responsive font size
-        marginLeft="4" // Add left margin
+        marginLeft="2" // Add left margin
       >
         {pathnames.length > 0 ? (
           <BreadcrumbItem>
             <BreadcrumbLink as={RouterLink} to="/">
-              <Icon as={MdHome} boxSize="6" color="blue" />
+              <Icon as={MdHome} boxSize="6" color="blue.500" />
             </BreadcrumbLink>
           </BreadcrumbItem>
         ) : (

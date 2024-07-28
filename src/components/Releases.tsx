@@ -36,7 +36,7 @@ interface Release {
   releaseType: string;
   componentVersion: string;
   containsBug: boolean;
-  remarks: string;
+  description: string;
 }
 
 interface CustomMenuProps {
@@ -223,7 +223,7 @@ const Releases = () => {
           isDisabled={!selectedComponent}
         />
       </HStack>
-      <Box mt={4}>
+      <Box mt={8}>
         {loading ? (
           <Spinner size="xl" />
         ) : (
@@ -254,7 +254,7 @@ const Releases = () => {
                 <Th>Release Name</Th>
                 <Th>Version</Th>
                 <Th>Release Type</Th>
-                <Th>Remarks</Th>
+                <Th>Description</Th>
                 <Th>Contains Bug</Th>
               </Tr>
             </Thead>
@@ -265,8 +265,18 @@ const Releases = () => {
                     <Td>{release.releaseName}</Td>
                     <Td>{release.componentVersion}</Td>
                     <Td>{release.releaseType}</Td>
-                    <Td>{release.remarks ? release.remarks : "-"}</Td>
-                    <Td>{release.containsBug ? "Yes" : "No"}</Td>
+                    <Td
+                      sx={{
+                        maxWidth: "300px",
+                        whiteSpace: "pre-wrap",
+                        wordWrap: "break-word",
+                      }}
+                    >
+                      {release.description ? release.description : "-"}
+                    </Td>
+                    <Td color={release.containsBug ? "red.500" : "inherit"}>
+                      {release.containsBug ? "Yes" : "No"}
+                    </Td>
                   </Tr>
                 ))
               ) : (
