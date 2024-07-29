@@ -24,6 +24,7 @@ import { ChevronDownIcon } from "@chakra-ui/icons";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
+import { getTableStyles } from "./Styles";
 
 interface Component {
   componentName: string;
@@ -155,6 +156,8 @@ const Releases = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   const colorScheme = useColorModeValue("blue", "teal");
+  const { colorMode } = useColorMode();
+  const tableStyles = getTableStyles(colorMode);
 
   const fetchComponents = async () => {
     try {
@@ -227,28 +230,7 @@ const Releases = () => {
         {loading ? (
           <Spinner size="xl" />
         ) : (
-          <Table
-            colorScheme={colorScheme}
-            sx={{
-              "th, td": {
-                borderBottom: "1px solid",
-                borderColor: useColorModeValue("gray.200", "gray.700"),
-                padding: "8px",
-              },
-              th: {
-                backgroundColor: useColorModeValue("gray.100", "gray.900"),
-                color: useColorModeValue("gray.800", "gray.100"),
-              },
-              tr: {
-                "&:nth-of-type(even)": {
-                  backgroundColor: useColorModeValue("gray.50", "gray.800"),
-                },
-              },
-              "tr:hover": {
-                backgroundColor: useColorModeValue("gray.200", "gray.700"),
-              },
-            }}
-          >
+          <Table colorScheme={colorScheme} sx={tableStyles}>
             <Thead>
               <Tr>
                 <Th>Release Name</Th>

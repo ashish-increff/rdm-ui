@@ -16,8 +16,11 @@ import {
   Tbody,
   Td,
   Text,
+  Box,
+  useColorMode,
 } from "@chakra-ui/react";
 import { InfoOutlineIcon } from "@chakra-ui/icons";
+import { getTableStyles } from "./Styles";
 
 interface InfoPopoverProps {
   fields: {
@@ -33,6 +36,9 @@ const InfoPopover: React.FC<InfoPopoverProps> = ({
   fields,
   color = "teal.500",
 }) => {
+  const { colorMode } = useColorMode();
+  const tableStyles = getTableStyles(colorMode);
+
   return (
     <Popover placement="bottom-start" closeOnBlur={true}>
       <PopoverTrigger>
@@ -52,28 +58,30 @@ const InfoPopover: React.FC<InfoPopoverProps> = ({
               Showing <b>{fields.length}</b> Fields
             </Text>
           </Flex>
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>S.no</Th>
-                <Th>Field</Th>
-                <Th>Data Type</Th>
-                <Th>Description</Th>
-                <Th>Mandatory</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {fields.map((field, index) => (
-                <Tr key={index}>
-                  <Td>{index + 1}</Td>
-                  <Td>{field.field}</Td>
-                  <Td>{field.dataType}</Td>
-                  <Td>{field.description}</Td>
-                  <Td>{field.mandatory}</Td>
+          <Box maxHeight="300px" overflowY="auto">
+            <Table sx={tableStyles}>
+              <Thead>
+                <Tr>
+                  <Th>S.no</Th>
+                  <Th>Field</Th>
+                  <Th>Data Type</Th>
+                  <Th>Description</Th>
+                  <Th>Mandatory</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {fields.map((field, index) => (
+                  <Tr key={index}>
+                    <Td>{index + 1}</Td>
+                    <Td>{field.field}</Td>
+                    <Td>{field.dataType}</Td>
+                    <Td>{field.description}</Td>
+                    <Td>{field.mandatory}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
         </PopoverBody>
       </PopoverContent>
     </Popover>

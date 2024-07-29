@@ -29,6 +29,7 @@ import {
   Heading,
   Text,
   IconButton,
+  useColorMode,
 } from "@chakra-ui/react";
 import { FaEdit } from "react-icons/fa";
 import { useForm, useWatch } from "react-hook-form";
@@ -38,6 +39,7 @@ import Papa from "papaparse";
 import InfoPopover from "./InfoPopover";
 import { bulkUploadComponentFields } from "./InformativeFields";
 import ToastManager from "../utils/ToastManager"; // Import the ToastManager
+import { getTableStyles } from "./Styles";
 
 interface Component {
   componentName: string;
@@ -55,6 +57,9 @@ const Components = () => {
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
     null
   ); // State for selected component
+
+  const { colorMode } = useColorMode();
+  const tableStyles = getTableStyles(colorMode);
 
   const {
     register,
@@ -262,28 +267,7 @@ const Components = () => {
           Add Component
         </Button>
       </HStack>
-      <Table
-        colorScheme={colorScheme}
-        sx={{
-          "th, td": {
-            borderBottom: "1px solid",
-            borderColor: useColorModeValue("gray.200", "gray.700"),
-            padding: "8px",
-          },
-          th: {
-            backgroundColor: useColorModeValue("gray.100", "gray.900"),
-            color: useColorModeValue("gray.800", "gray.100"),
-          },
-          tr: {
-            "&:nth-of-type(even)": {
-              backgroundColor: useColorModeValue("gray.50", "gray.800"),
-            },
-          },
-          "tr:hover": {
-            backgroundColor: useColorModeValue("gray.200", "gray.700"),
-          },
-        }}
-      >
+      <Table colorScheme={colorScheme} sx={tableStyles}>
         <Thead>
           <Tr>
             <Th fontWeight="bold">Component Name</Th>

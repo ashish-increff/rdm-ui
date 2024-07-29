@@ -24,8 +24,42 @@ import {
   MenuList,
   MenuItem,
   Button,
+  Input,
+  Flex,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Link,
+  HStack,
+  Heading,
 } from "@chakra-ui/react";
+
+import {
+  addClientsCsvData,
+  addClientsCsvName,
+  updateClientsCsvData,
+  updateClientsCsvName,
+} from "../utils/SampleTemplatesData";
 import { ChevronDownIcon } from "@chakra-ui/icons";
+import InfoPopover from "./InfoPopover";
+import {
+  bulkAddClientsFields,
+  bulkUpdateClientsFields,
+} from "./InformativeFields";
+import { handleDownloadTemplate } from "../utils/Helper";
+
+import {
+  formControlStyles,
+  formLabelStyles,
+  menuButtonStyles,
+  menuListStyles,
+  menuItemStyles,
+  getTableStyles,
+} from "./Styles";
 
 type Client = {
   clientName: string;
@@ -60,82 +94,23 @@ const CustomMenu: React.FC<CustomMenuProps> = ({
   const { colorMode } = useColorMode();
 
   return (
-    <FormControl width="200px" isDisabled={isDisabled}>
-      <FormLabel
-        mb={2}
-        color={
-          colorMode === "dark" ? theme.colors.white : theme.colors.gray[700]
-        }
-      >
-        {label}
-      </FormLabel>
+    <FormControl sx={formControlStyles} isDisabled={isDisabled}>
+      <FormLabel sx={formLabelStyles(colorMode, theme)}>{label}</FormLabel>
       <Menu>
         <MenuButton
           as={Button}
-          bg={
-            colorMode === "dark"
-              ? theme.colors.gray[800]
-              : theme.colors.gray[100]
-          }
-          borderColor={
-            colorMode === "dark"
-              ? theme.colors.gray[600]
-              : theme.colors.gray[300]
-          }
-          _hover={{
-            borderColor:
-              colorMode === "dark"
-                ? theme.colors.gray[500]
-                : theme.colors.gray[400],
-            bg:
-              colorMode === "dark"
-                ? theme.colors.gray[700]
-                : theme.colors.gray[200],
-          }}
-          _active={{
-            bg:
-              colorMode === "dark"
-                ? theme.colors.gray[600]
-                : theme.colors.gray[300],
-          }}
-          borderWidth="1px"
-          borderRadius="md"
-          textAlign="left"
-          width="100%"
           rightIcon={<ChevronDownIcon />}
-          color={
-            colorMode === "dark" ? theme.colors.white : theme.colors.gray[700]
-          }
-          isDisabled={isDisabled}
+          sx={menuButtonStyles(colorMode, theme)}
+          disabled={isDisabled}
         >
           {selected || `Select ${label}`}
         </MenuButton>
-        <MenuList
-          bg={
-            colorMode === "dark" ? theme.colors.gray[800] : theme.colors.white
-          }
-          borderColor={theme.colors.gray[300]}
-          borderWidth="1px"
-          borderRadius="md"
-          boxShadow="md"
-          maxH="300px" // set a maximum height
-          overflowY="auto" // make the menu scrollable
-        >
+        <MenuList sx={menuListStyles(colorMode, theme)}>
           {options.map((option) => (
             <MenuItem
+              sx={menuItemStyles(colorMode, theme)}
               key={option}
               onClick={() => onChange(option)}
-              _hover={{
-                bg:
-                  colorMode === "dark"
-                    ? theme.colors.gray[600]
-                    : theme.colors.gray[100],
-              }}
-              color={
-                colorMode === "dark"
-                  ? theme.colors.white
-                  : theme.colors.gray[700]
-              }
             >
               {option}
             </MenuItem>
@@ -151,11 +126,25 @@ const Clients = () => {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const colorScheme = useColorModeValue("blue", "teal");
   const bgColor = useColorModeValue("white", "gray.800");
-  const tabsRef = useRef(null);
   const [tabIndex, setTabIndex] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { colorMode } = useColorMode();
+  const tableStyles = getTableStyles(colorMode);
+
+  const handleManageClientsClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   const selectedClientData = clients.find(
     (client) => client.clientName === selectedClient
+  );
+  const filteredClients = clients.filter((client) =>
+    client.clientName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleClientNameClick = (clientName: string) => {
@@ -173,7 +162,7 @@ const Clients = () => {
   }, []);
 
   return (
-    <Box padding="4" boxShadow="lg" bg={bgColor}>
+    <Box mt="0" pt="0" padding="4" boxShadow="lg" bg={bgColor}>
       <Tabs
         colorScheme={colorScheme}
         index={tabIndex}
@@ -191,34 +180,26 @@ const Clients = () => {
 
         <TabPanels>
           <TabPanel>
-            <Table
-              sx={{
-                "th, td": {
-                  borderBottom: "1px solid",
-                  borderColor: useColorModeValue("gray.200", "gray.700"),
-                  padding: "8px",
-                },
-                th: {
-                  backgroundColor: useColorModeValue("gray.100", "gray.900"),
-                  color: useColorModeValue("gray.800", "gray.100"),
-                },
-                tr: {
-                  "&:nth-of-type(even)": {
-                    backgroundColor: useColorModeValue("gray.50", "gray.800"),
-                  },
-                },
-                "tr:hover": {
-                  backgroundColor: useColorModeValue("gray.200", "gray.700"),
-                },
-              }}
-            >
+            <Flex mb={4}>
+              <Input
+                placeholder="Search Client"
+                maxW="250px"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                mr={4}
+              />
+              <Button colorScheme="blue" onClick={handleManageClientsClick}>
+                Manage Clients
+              </Button>
+            </Flex>
+            <Table sx={tableStyles}>
               <Thead>
                 <Tr>
                   <Th fontWeight="bold">Client Name</Th>
                   <Th fontWeight="bold">Deployment Group</Th>
                   <Th fontWeight="bold">Primary POC Name</Th>
                   <Th fontWeight="bold">Secondary POC Name</Th>
-                  <Th fontWeight="bold">URL</Th>
+                  <Th fontWeight="bold">DOMAIN URL</Th>
                   <Th fontWeight="bold">
                     Deployment
                     <br />
@@ -233,54 +214,64 @@ const Clients = () => {
                 </Tr>
               </Thead>
               <Tbody>
-                {clients.map((client) => (
-                  <Tr key={client.clientName}>
-                    <Td>
-                      <Button
-                        variant="link"
-                        onClick={() => handleClientNameClick(client.clientName)}
-                      >
-                        {client.clientName}
-                      </Button>
-                    </Td>
-                    <Td>{client.deploymentGroup}</Td>
-                    <Td>
-                      <Tooltip label={client.primaryPocEmail} placement="top">
-                        {client.primaryPocName}
-                      </Tooltip>
-                    </Td>
-                    <Td>
-                      <Tooltip label={client.secondaryPocEmail} placement="top">
-                        {client.secondaryPocName}
-                      </Tooltip>
-                    </Td>
-                    <Td>
-                      <a
-                        href={
-                          client.url.startsWith("http://") ||
-                          client.url.startsWith("https://")
-                            ? client.url
-                            : `http://${client.url}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: "none" }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.textDecoration = "underline")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.textDecoration = "none")
-                        }
-                      >
-                        {client.url}
-                      </a>
-                    </Td>
-                    <Td>{client.deploymentOnHold ? "Yes" : "No"}</Td>
-                    <Td>{client.deploymentPriority}</Td>
-
-                    <Td>{client.isDisabled ? "Yes" : "No"}</Td>
+                {filteredClients.length > 0 ? (
+                  filteredClients.map((client) => (
+                    <Tr key={client.clientName}>
+                      <Td>
+                        <Button
+                          variant="link"
+                          onClick={() =>
+                            handleClientNameClick(client.clientName)
+                          }
+                        >
+                          {client.clientName}
+                        </Button>
+                      </Td>
+                      <Td>{client.deploymentGroup}</Td>
+                      <Td>
+                        <Tooltip label={client.primaryPocEmail} placement="top">
+                          {client.primaryPocName}
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        <Tooltip
+                          label={client.secondaryPocEmail}
+                          placement="top"
+                        >
+                          {client.secondaryPocName}
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        <a
+                          href={
+                            client.url.startsWith("http://") ||
+                            client.url.startsWith("https://")
+                              ? client.url
+                              : `http://${client.url}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: "none" }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.textDecoration = "underline")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.textDecoration = "none")
+                          }
+                        >
+                          {client.url}
+                        </a>
+                      </Td>
+                      <Td>{client.deploymentOnHold ? "Yes" : "No"}</Td>
+                      <Td>{client.deploymentPriority}</Td>
+                      <Td>{client.isDisabled ? "Yes" : "No"}</Td>
+                    </Tr>
+                  ))
+                ) : (
+                  <Tr>
+                    <Td colSpan={8}>No matching Client Found</Td>
                   </Tr>
-                ))}
+                )}
               </Tbody>
             </Table>
           </TabPanel>
@@ -292,28 +283,7 @@ const Clients = () => {
               onChange={setSelectedClient}
             />
             {selectedClientData && (
-              <Table
-                mt={5}
-                sx={{
-                  "th, td": {
-                    borderBottom: "1px solid",
-                    borderColor: useColorModeValue("gray.200", "gray.700"),
-                    padding: "8px",
-                  },
-                  th: {
-                    backgroundColor: useColorModeValue("gray.100", "gray.900"),
-                    color: useColorModeValue("gray.800", "gray.100"),
-                  },
-                  tr: {
-                    "&:nth-of-type(even)": {
-                      backgroundColor: useColorModeValue("gray.50", "gray.800"),
-                    },
-                  },
-                  "tr:hover": {
-                    backgroundColor: useColorModeValue("gray.200", "gray.700"),
-                  },
-                }}
-              >
+              <Table sx={tableStyles} mt={5}>
                 <Thead>
                   <Tr>
                     <Th fontWeight="bold">Component Name</Th>
@@ -335,6 +305,114 @@ const Clients = () => {
           </TabPanel>
         </TabPanels>
       </Tabs>
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody>
+            <Tabs>
+              <TabList>
+                <Tab>Add Clients</Tab>
+                <Tab>Update Clients</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel>
+                  <Box
+                    maxW="md"
+                    mx="auto"
+                    p={6}
+                    borderWidth={1}
+                    borderRadius="lg"
+                    boxShadow="lg"
+                  >
+                    <FormControl>
+                      <FormLabel>Upload Client(s)</FormLabel>
+
+                      <Input type="file" accept=".csv" />
+                      <Flex
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        mt={2}
+                      >
+                        <Link
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDownloadTemplate(
+                              addClientsCsvData,
+                              addClientsCsvName
+                            );
+                          }}
+                          color="teal.500"
+                          marginRight="2"
+                        >
+                          Download Template
+                        </Link>
+                        <InfoPopover
+                          fields={bulkAddClientsFields}
+                          color="teal.500"
+                        />
+                      </Flex>
+                    </FormControl>
+                    <HStack justifyContent="flex-end" mt={4}>
+                      <Button colorScheme="gray" onClick={handleCloseModal}>
+                        Cancel
+                      </Button>
+                      <Button colorScheme="blue" type="submit">
+                        Upload
+                      </Button>
+                    </HStack>
+                  </Box>
+                </TabPanel>
+                <TabPanel>
+                  <Box
+                    maxW="md"
+                    mx="auto"
+                    p={6}
+                    borderWidth={1}
+                    borderRadius="lg"
+                    boxShadow="lg"
+                  >
+                    <FormControl>
+                      <FormLabel>Upload Client(s)</FormLabel>
+                      <Input type="file" accept=".csv" />
+                      <Flex
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        mt={2}
+                      >
+                        <Link
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDownloadTemplate(
+                              updateClientsCsvData,
+                              updateClientsCsvName
+                            );
+                          }}
+                          color="teal.500"
+                          marginRight="2"
+                        >
+                          Download Template
+                        </Link>
+                        <InfoPopover
+                          fields={bulkUpdateClientsFields}
+                          color="teal.500"
+                        />
+                      </Flex>
+                    </FormControl>
+                    <HStack justifyContent="flex-end" mt={4}>
+                      <Button colorScheme="gray" onClick={handleCloseModal}>
+                        Cancel
+                      </Button>
+                      <Button colorScheme="blue" type="submit">
+                        Upload
+                      </Button>
+                    </HStack>
+                  </Box>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
