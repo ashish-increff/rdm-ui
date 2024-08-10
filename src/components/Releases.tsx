@@ -25,20 +25,7 @@ import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
 import { getTableStyles } from "./Styles";
-
-interface Component {
-  componentName: string;
-  pocName?: string;
-  pocEmail?: string;
-}
-
-interface Release {
-  releaseName: string;
-  releaseType: string;
-  componentVersion: string;
-  containsBug: boolean;
-  description: string;
-}
+import { Component, Release } from "../utils/Modal";
 
 interface CustomMenuProps {
   label: string;
@@ -215,7 +202,7 @@ const Releases = () => {
         <CustomMenu
           label="Component"
           selected={selectedComponent}
-          options={components.map((c) => c.componentName)}
+          options={components.map((c) => c.name)}
           onChange={setSelectedComponent}
         />
         <CustomMenu
@@ -233,7 +220,7 @@ const Releases = () => {
           <Table colorScheme={colorScheme} sx={tableStyles}>
             <Thead>
               <Tr>
-                <Th>Release Name</Th>
+                <Th>Name</Th>
                 <Th>Version</Th>
                 <Th>Release Type</Th>
                 <Th>Description</Th>
@@ -244,7 +231,7 @@ const Releases = () => {
               {filteredReleases.length > 0 ? (
                 filteredReleases.map((release, index) => (
                   <Tr key={index}>
-                    <Td>{release.releaseName}</Td>
+                    <Td>{release.name}</Td>
                     <Td>{release.componentVersion}</Td>
                     <Td>{release.releaseType}</Td>
                     <Td

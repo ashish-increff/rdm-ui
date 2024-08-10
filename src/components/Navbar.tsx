@@ -20,6 +20,7 @@ import {
 import { HamburgerIcon } from "@chakra-ui/icons";
 import { useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
+import logo from "../assets/image/logo.png";
 import {
   navStyles,
   drawerContentStyles,
@@ -56,11 +57,7 @@ const Navbar = () => {
             size="sm"
           />
           <RouterLink to="/">
-            <Image
-              src="https://static.increff.com/assets/favicon.ico?v=2"
-              boxSize="25px"
-              alt="logo"
-            />
+            <Image src={logo} boxSize="25px" alt="logo" />
           </RouterLink>
           <RouterLink to="/">
             <Text fontSize="lg" fontWeight="bold">

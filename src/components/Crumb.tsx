@@ -23,6 +23,7 @@ const Crumb = () => {
     components: "Components",
     clients: "Clients",
     releases: "Releases",
+    deployments: "Deployments",
     // Add more mappings as needed
   };
 

@@ -6,12 +6,23 @@ import {
   Heading,
   Text,
   Center,
+  Flex,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import {
+  FaTools,
+  FaUserFriends,
+  FaRocket,
+  FaNetworkWired,
+  FaShippingFast,
+  FaClock,
+  FaUserCog,
+  FaFileAlt,
+} from "react-icons/fa";
 
 interface Item {
   label: string;
-  icon: string;
+  icon: JSX.Element;
 }
 
 interface SectionProps {
@@ -27,34 +38,39 @@ const Home: React.FC = () => {
         <Section
           title="Masters"
           items={[
-            { label: "Components", icon: "🔧" },
-            { label: "Clients", icon: "👥" },
+            { label: "Components", icon: <FaTools color="red.400" /> },
+            { label: "Clients", icon: <FaUserFriends color="red.400" /> },
           ]}
-          color="red.500"
+          color="red.400"
         />
         <Section
           title="Release Management"
           items={[
-            { label: "Releases", icon: "🚀" },
-            { label: "Deployment Groups", icon: "👥" },
+            { label: "Releases", icon: <FaRocket color="green" /> },
+            {
+              label: "Deployment Groups",
+              icon: <FaNetworkWired color="green" />,
+            },
           ]}
           color="green.500"
         />
         <Section
           title="Deployment"
-          items={[{ label: "Deployment", icon: "📦" }]}
+          items={[
+            { label: "Deployment", icon: <FaShippingFast color="blue" /> },
+          ]}
           color="blue.500"
         />
         <Section
           title="Downtime"
-          items={[{ label: "Downtime", icon: "⏲️" }]}
+          items={[{ label: "Downtime", icon: <FaClock color="purple" /> }]}
           color="purple.500"
         />
         <Section
           title="Admin"
           items={[
-            { label: "Manage Users", icon: "👤" },
-            { label: "Audit Log", icon: "📝" },
+            { label: "Manage Users", icon: <FaUserCog color="orange" /> },
+            { label: "Audit Log", icon: <FaFileAlt color="orange" /> },
           ]}
           color="orange.500"
         />
@@ -76,21 +92,26 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     if (label === "Releases") {
       navigate("/releases");
     }
+    if (label === "Deployment Groups") {
+      navigate("/deployment-groups");
+    }
+    if (label === "Deployment") {
+      navigate("/deployments");
+    }
     // Add more routes here if needed
   };
 
   return (
     <Box width="100%" color={color} marginBottom="20px">
-      {" "}
-      {/* Added marginBottom here */}
       <Heading size="md" marginBottom="10px">
         {title}
       </Heading>
-      <SimpleGrid columns={[1, null, 2, 3]} spacing="20px">
+      <Flex direction="row" wrap="wrap" justify="flex-start">
         {items.map((item, index: number) => (
           <Center
             key={index}
-            height="110px"
+            width="200px" // Ensure width and height are the same
+            height="170px"
             borderRadius="md"
             border="1px solid"
             borderColor="gray.200"
@@ -99,15 +120,17 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
             transition="all 0.2s"
             cursor="pointer"
             userSelect="none"
+            marginRight="30px"
+            marginBottom="20px"
             onClick={() => handleItemClick(item.label)}
           >
             <VStack>
-              <Text fontSize="4xl">{item.icon}</Text>
-              <Text>{item.label}</Text>
+              <Text fontSize="3xl">{item.icon}</Text>
+              <Text fontWeight="bold">{item.label}</Text>
             </VStack>
           </Center>
         ))}
-      </SimpleGrid>
+      </Flex>
     </Box>
   );
 };

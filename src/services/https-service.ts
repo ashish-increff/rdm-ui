@@ -26,6 +26,10 @@ class HttpService {
   create<T>(entity: T) {
     return apiClient.post(this.endpoint, entity);
   }
+
+  search<T>(entity: T) {
+    return apiClient.post(this.endpoint + "/search", entity);
+  }
   
   bulkCreate<T>(entities: T[]) {
     return apiClient.post(this.endpoint, entities);
@@ -35,8 +39,8 @@ class HttpService {
     return apiClient.patch(this.endpoint + "/" + entity.id, entity);
   }
 
-  testUpdate<T>(entity: T) {
-    return apiClient.put(this.endpoint, entity);
+  bulkUpdate<T>(entities: T[]) {
+    return apiClient.put(this.endpoint, entities);
   }
   
   getByComponentName<T>(componentName: string) {

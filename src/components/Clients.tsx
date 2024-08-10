@@ -60,20 +60,8 @@ import {
   menuItemStyles,
   getTableStyles,
 } from "./Styles";
-
-type Client = {
-  clientName: string;
-  deploymentGroup: string;
-  url: string;
-  deploymentOnHold: boolean;
-  deploymentPriority: number;
-  primaryPocName: string;
-  primaryPocEmail: string;
-  secondaryPocName: string;
-  secondaryPocEmail: string;
-  isDisabled: boolean;
-  componentVersions: Record<string, string>;
-};
+import { FaExternalLinkAlt } from "react-icons/fa";
+import { Client } from "../utils/Modal";
 
 interface CustomMenuProps {
   label: string;
@@ -259,7 +247,7 @@ const Clients = () => {
                             (e.currentTarget.style.textDecoration = "none")
                           }
                         >
-                          {client.url}
+                          <FaExternalLinkAlt />
                         </a>
                       </Td>
                       <Td>{client.deploymentOnHold ? "Yes" : "No"}</Td>

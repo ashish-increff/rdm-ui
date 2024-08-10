@@ -6,12 +6,6 @@ export const bulkUploadComponentFields = [
       mandatory: "Yes",
     },
     {
-      field: "pocName",
-      dataType: "String",
-      description: "Name of the point of contact",
-      mandatory: "No",
-    },
-    {
       field: "pocEmail",
       dataType: "String",
       description: "Email of the point of contact",
