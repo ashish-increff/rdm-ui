@@ -104,6 +104,9 @@ const Navbar = () => {
               >
                 Deployment Groups
               </LinkWrapper>
+              <LinkWrapper to="/scripts" onClose={onClose} color="green.500">
+                Scripts
+              </LinkWrapper>
               <LinkWrapper to="/deployment" onClose={onClose} color="blue.500">
                 Deployment
               </LinkWrapper>

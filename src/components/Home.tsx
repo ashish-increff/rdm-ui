@@ -18,6 +18,7 @@ import {
   FaClock,
   FaUserCog,
   FaFileAlt,
+  FaFileCode,
 } from "react-icons/fa";
 
 interface Item {
@@ -50,6 +51,10 @@ const Home: React.FC = () => {
             {
               label: "Deployment Groups",
               icon: <FaNetworkWired color="green" />,
+            },
+            {
+              label: "Scripts",
+              icon: <FaFileCode color="green" />,
             },
           ]}
           color="green.500"
@@ -97,6 +102,9 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     }
     if (label === "Deployment") {
       navigate("/deployments");
+    }
+    if (label === "Scripts") {
+      navigate("/scripts");
     }
     // Add more routes here if needed
   };

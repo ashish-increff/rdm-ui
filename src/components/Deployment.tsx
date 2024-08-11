@@ -17,11 +17,24 @@ import {
   Th,
   Td,
   Spinner,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  VStack,
+  Textarea,
+  ModalFooter,
+  Spacer,
+  HStack,
+  IconButton,
 } from "@chakra-ui/react";
+import { FaEdit } from "react-icons/fa";
 import Select, { SingleValue } from "react-select";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import deploymentGroupService from "../services/deployment-group-service";
+import DeploymentGroupModal from "./DeploymentGroupModal";
 import {
   Component,
   Release,
@@ -29,6 +42,7 @@ import {
   DeploymentGroup,
 } from "../utils/Modal";
 import ToastManager from "../utils/ToastManager";
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
 const Deployment = () => {
   const theme = useTheme();
@@ -48,6 +62,15 @@ const Deployment = () => {
     []
   ); // Always initialize as an empty array
   const [loadingDeployments, setLoadingDeployments] = useState<boolean>(false); // State for loading
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => setIsOpen(false);
+  const initialSelects = [
+    { id: 1, value1: "Component1", value2: "v1.0" },
+    { id: 2, value1: "Component2", value2: "v2.0" },
+  ];
 
   type OptionType = {
     value: string;
@@ -153,6 +176,12 @@ const Deployment = () => {
           releasedVersions,
         });
       setDeploymentGroups(response.data || []); // Ensure response data is always an array
+      if (type === "name" || type === "release") {
+        ToastManager.success(
+          "Success",
+          "Deployment Groups Loaded Successfully"
+        );
+      }
     } catch (error) {
       ToastManager.error(
         "Error Searching Deployment Groups",
@@ -171,7 +200,7 @@ const Deployment = () => {
       borderRadius="md"
     >
       {loadingComponents ? (
-        <Spinner size="xl" />
+        <Spinner size="xs" />
       ) : (
         <Grid
           templateColumns={[
@@ -187,7 +216,7 @@ const Deployment = () => {
             <FormControl key={i}>
               <FormLabel fontWeight="bold">{component.name}</FormLabel>
               {loadingReleases[component.name] ? (
-                <Spinner size="sm" />
+                <Spinner size="xs" />
               ) : (
                 <Select
                   placeholder="All"
@@ -222,12 +251,14 @@ const Deployment = () => {
         <ChakraText mx={2}>OR</ChakraText>
       </Flex>
 
-      <Stack spacing={3} mb={4}>
-        <FormLabel fontWeight="bold">Name</FormLabel>
+      <Stack mb={4}>
+        <FormLabel fontWeight="bold" mb="0">
+          Name
+        </FormLabel>
         <Flex>
           <Input
             placeholder="Search Deployment Group"
-            maxW="250px"
+            maxW="230px"
             mr={4}
             backgroundColor="white"
             value={searchValue}
@@ -241,12 +272,14 @@ const Deployment = () => {
           >
             Search
           </Button>
-          <Button colorScheme="green">Add Group</Button>
+          <Button colorScheme="green" onClick={openModal}>
+            Add Group
+          </Button>
         </Flex>
       </Stack>
 
       {loadingDeployments ? (
-        <Spinner size="xl" />
+        <Spinner size="xs" />
       ) : (
         <Table colorScheme="gray">
           <Thead backgroundColor="white">
@@ -261,29 +294,35 @@ const Deployment = () => {
           <Tbody>
             {deploymentGroups.length === 0 ? (
               <Tr>
-                <Td colSpan={5}>
-                  <Flex justifyContent="center" alignItems="center" my={4}>
-                    <ChakraText>No Deployment Groups to show</ChakraText>
-                  </Flex>
-                </Td>
+                <Td colSpan={5}>No matching Deployment Group Found</Td>
               </Tr>
             ) : (
               deploymentGroups.map((group, index) => (
-                <Tr key={index}>
+                <Tr key={index} _hover={{ bg: "gray.100" }}>
+                  {" "}
+                  {/* Row hover effect */}
                   <Td>{group.name}</Td>
                   <Td>
                     {Object.entries(group.releasedVersions).map(
                       ([key, value]) => (
-                        <div key={key}>
-                          {key}: {value}
-                        </div>
+                        <Flex key={key}>
+                          <Box as="span" minW="100px">
+                            {key}
+                          </Box>
+                          <Box as="span">: {value}</Box>
+                        </Flex>
                       )
                     )}
                   </Td>
-                  <Td>{group.description}</Td>
-                  <Td>{group.remarks}</Td>
+                  <Td>{group.description ? group.description : "-"}</Td>
+                  <Td>{group.remarks ? group.remarks : "-"}</Td>
                   <Td>
-                    {/* Add actions like buttons for editing or deleting the group */}
+                    <IconButton
+                      aria-label="Edit"
+                      icon={<FaEdit />}
+                      size="sm"
+                      variant="ghost"
+                    />
                   </Td>
                 </Tr>
               ))
@@ -291,6 +330,11 @@ const Deployment = () => {
           </Tbody>
         </Table>
       )}
+      <DeploymentGroupModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        modalHeader="Add Deployment Group"
+      />
     </Box>
   );
 };

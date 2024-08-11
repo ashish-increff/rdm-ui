@@ -9,6 +9,7 @@ import Crumb from "./components/Crumb";
 import Releases from "./components/Releases";
 import DeploymentGroup from "./components/DeploymentGroup";
 import Deployment from "./components/Deployment";
+import Scripts from "./components/Scripts";
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
           <Route path="/releases" element={<Releases />} />
           <Route path="/deployment-groups" element={<DeploymentGroup />} />
           <Route path="/deployments" element={<Deployment />} />
+          <Route path="/scripts" element={<Scripts />} />
         </Routes>
       </Box>
     </>

@@ -1,262 +1,328 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  Select,
-  VStack,
-  HStack,
-  IconButton,
   Box,
-  FormLabel,
+  Button,
   Input,
+  Grid,
   FormControl,
-  Spacer,
-  Textarea,
+  FormLabel,
+  useTheme,
   Flex,
+  Text as ChakraText,
+  Stack,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  IconButton,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { FaEdit } from "react-icons/fa";
+import Select, { SingleValue } from "react-select";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
+import deploymentGroupService from "../services/deployment-group-service";
+import DeploymentGroupModal from "./DeploymentGroupModal";
+import {
+  Component,
+  Release,
+  SearchDeploymentGroup,
+  DeploymentGroup,
+} from "../utils/Modal";
 import ToastManager from "../utils/ToastManager";
-import { Component, Release } from "../utils/Modal";
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
-interface SelectGroup {
-  id: number;
-  value1: string;
-  value2: string;
-}
+const DeploymentGroups = () => {
+  const theme = useTheme();
+  const [components, setComponents] = useState<Component[]>([]);
+  const [releaseOptions, setReleaseOptions] = useState<
+    Record<string, OptionType[]>
+  >({});
+  const [loadingComponents, setLoadingComponents] = useState<boolean>(true);
+  const [loadingReleases, setLoadingReleases] = useState<
+    Record<string, boolean>
+  >({});
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedReleases, setSelectedReleases] = useState<
+    Record<string, string>
+  >({});
+  const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
+    []
+  ); // Always initialize as an empty array
+  const [loadingDeployments, setLoadingDeployments] = useState<boolean>(false); // State for loading
 
-const DeploymentGroup: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selects, setSelects] = useState<SelectGroup[]>([
-    { id: 1, value1: "", value2: "" },
-  ]);
-  const [deploymentIdentifier, setDeploymentIdentifier] = useState("");
-  const [description, setDescription] = useState("");
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
-  const [components, setComponents] = useState<Component[]>([]);
-  const [releases, setReleases] = useState<Release[]>([]);
+  const initialSelects = [
+    { id: 1, value1: "Component1", value2: "v1.0" },
+    { id: 2, value1: "Component2", value2: "v2.0" },
+  ];
+
+  type OptionType = {
+    value: string;
+    label: string;
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    setSearchValue(newValue);
+  };
 
   useEffect(() => {
     fetchComponents();
+    handleSubmit();
   }, []);
 
   const fetchComponents = async () => {
     try {
-      const { request } = componentService.getAll<Component>();
-      const response = await request;
-      setComponents(response.data); // Assuming response.data contains the array of components
+      const response = await componentService.getAll<Component>().request;
+      setComponents(response.data);
+      setLoadingComponents(false);
+
+      response.data.forEach((component) => {
+        fetchReleases(component.name);
+      });
     } catch (error) {
+      console.error(error);
       ToastManager.error("Error Loading Components", (error as Error).message);
+      setLoadingComponents(false);
     }
   };
 
   const fetchReleases = async (componentName: string) => {
+    setLoadingReleases((prevState) => ({
+      ...prevState,
+      [componentName]: true,
+    }));
+
     try {
       const response = await releaseService.getByComponentName<Release[]>(
         componentName
       );
-      setReleases(response.data);
+      const releases = response.data;
+      const options = releases.map((release) => ({
+        value: release.componentVersion + ": " + release.name,
+        label: release.componentVersion + ": " + release.name,
+      }));
+
+      setReleaseOptions((prevOptions) => ({
+        ...prevOptions,
+        [componentName]: [{ value: "All", label: "All" }, ...options],
+      }));
     } catch (error) {
       ToastManager.error("Error Loading Releases", (error as Error).message);
+    } finally {
+      setLoadingReleases((prevState) => ({
+        ...prevState,
+        [componentName]: false,
+      }));
     }
   };
 
   const handleSelectChange = (
-    id: number,
-    field: "value1" | "value2",
-    value: string
+    selectedOption: SingleValue<OptionType>,
+    componentName: string
   ) => {
-    setSelects((prevSelects) =>
-      prevSelects.map((select) =>
-        select.id === id
-          ? {
-              ...select,
-              [field]: value,
-              ...(field === "value1" && { value2: "" }),
-            }
-          : select
-      )
-    );
-
-    if (field === "value1") {
-      fetchReleases(value);
+    if (selectedOption) {
+      setSelectedReleases((prev) => ({
+        ...prev,
+        [componentName]:
+          selectedOption.value === "All" ? "All" : selectedOption.value,
+      }));
+    } else {
+      setSelectedReleases((prev) => ({
+        ...prev,
+        [componentName]: "All",
+      }));
     }
   };
 
-  const addMoreComponents = () => {
-    setSelects((prevSelects) => [
-      ...prevSelects,
-      { id: prevSelects.length + 1, value1: "", value2: "" },
-    ]);
-  };
+  const handleSubmit = async (type?: "release" | "name") => {
+    let name: string | null = null;
+    let releasedVersions: Record<string, string> | null = null;
 
-  const removeSelectGroup = (id: number) => {
-    setSelects((prevSelects) =>
-      prevSelects.filter((select) => select.id !== id)
-    );
-  };
+    if (type === "release") {
+      releasedVersions = Object.keys(selectedReleases).reduce((acc, key) => {
+        const selectedValue = selectedReleases[key];
+        if (selectedValue !== "All") {
+          const componentVersion = selectedValue.split(":")[0].trim();
+          acc[key] = componentVersion;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+    } else if (type === "name") {
+      name = searchValue;
+    }
 
-  const handleSubmit = () => {
-    console.log(selects);
-    closeModal();
+    setLoadingDeployments(true); // Start loading
+    try {
+      const response =
+        await deploymentGroupService.search<SearchDeploymentGroup>({
+          name,
+          releasedVersions,
+        });
+      setDeploymentGroups(response.data || []); // Ensure response data is always an array
+      if (type === "name" || type === "release") {
+        ToastManager.success(
+          "Success",
+          "Deployment Groups Loaded Successfully"
+        );
+      }
+    } catch (error) {
+      ToastManager.error(
+        "Error Searching Deployment Groups",
+        (error as Error).message
+      );
+    } finally {
+      setLoadingDeployments(false); // Stop loading
+    }
   };
 
   return (
-    <Box mt="0" pt="0" padding="4" boxShadow="lg">
-      <div>
-        <Button colorScheme="blue" onClick={openModal}>
-          Create Deployment Group
-        </Button>
-
-        <Modal
-          isOpen={isOpen}
-          onClose={closeModal}
-          closeOnOverlayClick={false}
-          size="lg"
+    <Box
+      padding="4"
+      boxShadow="lg"
+      bg={theme.colors.gray[50]}
+      borderRadius="md"
+    >
+      {loadingComponents ? // <Spinner size="sm" />
+      null : (
+        <Grid
+          templateColumns={[
+            "repeat(1, 1fr)",
+            "repeat(4, 1fr)",
+            "repeat(6, 1fr)",
+          ]}
+          gap={4}
+          alignItems="start"
+          w="full"
         >
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Create Deployment Group</ModalHeader>
+          {components.map((component, i) => (
+            <FormControl key={i}>
+              <FormLabel fontWeight="bold">{component.name}</FormLabel>
+              {loadingReleases[component.name] ? // <Spinner size="sm" />
+              null : (
+                <Select
+                  placeholder="All"
+                  options={
+                    releaseOptions[component.name] || [
+                      { value: "All", label: "All" },
+                    ]
+                  }
+                  isClearable
+                  isSearchable
+                  menuPlacement="auto"
+                  menuShouldScrollIntoView={true}
+                  onChange={(option) =>
+                    handleSelectChange(option, component.name)
+                  }
+                />
+              )}
+            </FormControl>
+          ))}
 
-            <ModalBody>
-              <Box
-                maxW="md"
-                mx="auto"
-                p={6}
-                borderWidth={1}
-                borderRadius="lg"
-                boxShadow="lg"
-              >
-                <VStack spacing={4}>
-                  <FormControl>
-                    <FormLabel>Deployment Group Name</FormLabel>
-                    <Input
-                      value={deploymentIdentifier}
-                      onChange={(e) => setDeploymentIdentifier(e.target.value)}
+          <Button
+            onClick={() => handleSubmit("release")}
+            colorScheme="blue"
+            alignSelf="end"
+            maxWidth="80px"
+          >
+            Search
+          </Button>
+        </Grid>
+      )}
+      <Flex justifyContent="center" alignItems="center" my={4}>
+        <ChakraText mx={2}>OR</ChakraText>
+      </Flex>
+
+      <Stack mb={4}>
+        <FormLabel fontWeight="bold" mb="0">
+          Name
+        </FormLabel>
+        <Flex>
+          <Input
+            placeholder="Search Deployment Group"
+            maxW="230px"
+            mr={4}
+            backgroundColor="white"
+            value={searchValue}
+            onChange={handleInputChange}
+          />
+          <Button
+            colorScheme="blue"
+            mr="15px"
+            isDisabled={!searchValue}
+            onClick={() => handleSubmit("name")}
+          >
+            Search
+          </Button>
+          <Button colorScheme="green" onClick={openModal}>
+            Add Group
+          </Button>
+        </Flex>
+      </Stack>
+
+      {loadingDeployments ? // <Spinner size="xl" />
+      null : (
+        <Table colorScheme="gray">
+          <Thead backgroundColor="white">
+            <Tr>
+              <Th boxShadow="md">Name</Th>
+              <Th boxShadow="md">Released Versions</Th>
+              <Th boxShadow="md">Description</Th>
+              <Th boxShadow="md">Remarks</Th>
+              <Th boxShadow="md">Action</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {deploymentGroups.length === 0 ? (
+              <Tr>
+                <Td colSpan={5}>No matching Deployment Group Found</Td>
+              </Tr>
+            ) : (
+              deploymentGroups.map((group, index) => (
+                <Tr key={index} _hover={{ bg: "gray.100" }}>
+                  {" "}
+                  {/* Row hover effect */}
+                  <Td>{group.name}</Td>
+                  <Td>
+                    {Object.entries(group.releasedVersions).map(
+                      ([key, value]) => (
+                        <Flex key={key}>
+                          <Box as="span" minW="100px">
+                            {key}
+                          </Box>
+                          <Box as="span">: {value}</Box>
+                        </Flex>
+                      )
+                    )}
+                  </Td>
+                  <Td>{group.description ? group.description : "-"}</Td>
+                  <Td>{group.remarks ? group.remarks : "-"}</Td>
+                  <Td>
+                    <IconButton
+                      aria-label="Edit"
+                      icon={<FaEdit />}
+                      size="sm"
+                      variant="ghost"
                     />
-                  </FormControl>
-                  <FormControl>
-                    <FormLabel>Description</FormLabel>
-                    <Textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                    />
-                  </FormControl>
-                  <FormControl>
-                    <FormLabel>Components</FormLabel>
-                    {selects.map((select, index) => (
-                      <Box key={select.id}>
-                        <HStack spacing={4}>
-                          <VStack w="100%">
-                            <Select
-                              placeholder={
-                                !select.value1 ? "Select Component" : ""
-                              }
-                              value={select.value1}
-                              onChange={(e) =>
-                                handleSelectChange(
-                                  select.id,
-                                  "value1",
-                                  e.target.value
-                                )
-                              }
-                            >
-                              {components
-                                .filter(
-                                  (component) =>
-                                    !selects.some(
-                                      (otherSelect) =>
-                                        otherSelect.id !== select.id &&
-                                        otherSelect.value1 === component.name
-                                    )
-                                )
-                                .map((component) => (
-                                  <option
-                                    key={component.name}
-                                    value={component.name}
-                                  >
-                                    {component.name}
-                                  </option>
-                                ))}
-                            </Select>
-                          </VStack>
-                          <VStack w="100%">
-                            <Select
-                              placeholder={
-                                !select.value2 ? "Select Version" : ""
-                              }
-                              value={select.value2}
-                              onChange={(e) =>
-                                handleSelectChange(
-                                  select.id,
-                                  "value2",
-                                  e.target.value
-                                )
-                              }
-                              isDisabled={!select.value1} // Disable if no component is selected
-                            >
-                              {releases.map((release) => (
-                                <option
-                                  key={release.componentVersion}
-                                  value={release.componentVersion}
-                                >
-                                  {release.componentVersion +
-                                    " : " +
-                                    release.name}
-                                </option>
-                              ))}
-                            </Select>
-                          </VStack>
-                          {selects.length > 1 && (
-                            <IconButton
-                              aria-label="Delete select group"
-                              icon={<DeleteIcon />}
-                              onClick={() => removeSelectGroup(select.id)}
-                            />
-                          )}
-                        </HStack>
-                        {index < selects.length - 1 && <Spacer height="10px" />}{" "}
-                        {/* Add a spacer */}
-                      </Box>
-                    ))}
-                    <Spacer height="20px" /> {/* Add a spacer */}
-                    <Button
-                      leftIcon={<AddIcon />}
-                      colorScheme="teal"
-                      variant="solid"
-                      onClick={addMoreComponents}
-                      isDisabled={selects.some(
-                        (select) => !select.value1 || !select.value2
-                      )} // Disable if any select is not selected
-                    >
-                      Add Component
-                    </Button>
-                  </FormControl>
-                </VStack>
-                <Flex justifyContent="flex-end" mt={8}>
-                  <Button colorScheme="gray" mr={3} onClick={closeModal}>
-                    Cancel
-                  </Button>
-                  <Button colorScheme="blue" onClick={handleSubmit}>
-                    Submit
-                  </Button>
-                </Flex>
-              </Box>
-            </ModalBody>
-            <ModalFooter></ModalFooter>
-          </ModalContent>
-        </Modal>
-      </div>
+                  </Td>
+                </Tr>
+              ))
+            )}
+          </Tbody>
+        </Table>
+      )}
+      <DeploymentGroupModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        modalHeader="Add Deployment Group"
+      />
     </Box>
   );
 };
 
-export default DeploymentGroup;
+export default DeploymentGroups;

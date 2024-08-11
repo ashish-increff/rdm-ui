@@ -37,3 +37,10 @@ export interface SearchDeploymentGroup{
     name: string| null
     releasedVersions: Record<string, string> | null;
   }
+
+export interface Script{
+  sourceDeploymentGroupName: string;
+  destinationDeploymentGroupName: string;
+  scriptType: string;
+  link: string;
+}
