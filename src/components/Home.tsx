@@ -19,6 +19,8 @@ import {
   FaUserCog,
   FaFileAlt,
   FaFileCode,
+  FaPlusCircle,
+  FaTasks,
 } from "react-icons/fa";
 
 interface Item {
@@ -62,9 +64,13 @@ const Home: React.FC = () => {
         <Section
           title="Deployment"
           items={[
-            { label: "Deployment", icon: <FaShippingFast color="blue" /> },
+            {
+              label: "Create Deployment",
+              icon: <FaPlusCircle color="#3182ce" />,
+            },
+            { label: "Manage Deployment", icon: <FaTasks color="#3182ce" /> },
           ]}
-          color="blue.500"
+          color="#3182ce"
         />
         <Section
           title="Downtime"
@@ -100,7 +106,10 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     if (label === "Deployment Groups") {
       navigate("/deployment-groups");
     }
-    if (label === "Deployment") {
+    if (label === "Create Deployment") {
+      navigate("/create-deployment");
+    }
+    if (label === "Manage Deployment") {
       navigate("/deployments");
     }
     if (label === "Scripts") {
@@ -118,19 +127,20 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
         {items.map((item, index: number) => (
           <Center
             key={index}
-            width="200px" // Ensure width and height are the same
-            height="170px"
+            width="190px" // Ensure width and height are the same
+            height="160px"
             borderRadius="md"
             border="1px solid"
             borderColor="gray.200"
             boxShadow="sm"
-            _hover={{ boxShadow: "md", transform: "scale(1.05)" }}
+            _hover={{ boxShadow: "md", transform: "scale(1.07)" }}
             transition="all 0.2s"
             cursor="pointer"
             userSelect="none"
             marginRight="30px"
             marginBottom="20px"
             onClick={() => handleItemClick(item.label)}
+            backgroundColor="white"
           >
             <VStack>
               <Text fontSize="3xl">{item.icon}</Text>

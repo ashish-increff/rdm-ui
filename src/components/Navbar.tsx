@@ -66,12 +66,12 @@ const Navbar = () => {
             </Text>
           </RouterLink>
         </HStack>
-        <HStack spacing="5px" alignItems="center">
-          {" "}
-          {/* Reduced spacing */}
-          <Text fontSize="sm">Dark Mode</Text> {/* Reduced fontSize */}
-          <Switch isChecked={colorMode === "dark"} onChange={toggleColorMode} />
-        </HStack>
+        {/*
+<HStack spacing="5px" alignItems="center">
+  <Text fontSize="sm">Dark Mode</Text>
+  <Switch isChecked={colorMode === "dark"} onChange={toggleColorMode} />
+</HStack>
+*/}
       </Box>
 
       <Drawer
@@ -107,8 +107,19 @@ const Navbar = () => {
               <LinkWrapper to="/scripts" onClose={onClose} color="green.500">
                 Scripts
               </LinkWrapper>
-              <LinkWrapper to="/deployment" onClose={onClose} color="blue.500">
-                Deployment
+              <LinkWrapper
+                to="/create-deployment"
+                onClose={onClose}
+                color="blue.500"
+              >
+                Create Deployment
+              </LinkWrapper>
+              <LinkWrapper
+                to="/manage-deployment"
+                onClose={onClose}
+                color="blue.500"
+              >
+                Manage Deployment
               </LinkWrapper>
               <LinkWrapper to="/downtime" onClose={onClose} color="purple.500">
                 DownTime

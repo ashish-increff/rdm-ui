@@ -16,17 +16,6 @@ import {
   Tr,
   Th,
   Td,
-  Spinner,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  VStack,
-  Textarea,
-  ModalFooter,
-  Spacer,
-  HStack,
   IconButton,
 } from "@chakra-ui/react";
 import { FaEdit } from "react-icons/fa";
@@ -199,9 +188,7 @@ const Deployment = () => {
       bg={theme.colors.gray[50]}
       borderRadius="md"
     >
-      {loadingComponents ? (
-        <Spinner size="xs" />
-      ) : (
+      {loadingComponents ? null : ( // <Spinner size="sm" />
         <Grid
           templateColumns={[
             "repeat(1, 1fr)",
@@ -215,9 +202,7 @@ const Deployment = () => {
           {components.map((component, i) => (
             <FormControl key={i}>
               <FormLabel fontWeight="bold">{component.name}</FormLabel>
-              {loadingReleases[component.name] ? (
-                <Spinner size="xs" />
-              ) : (
+              {loadingReleases[component.name] ? null : ( // <Spinner size="sm" />
                 <Select
                   placeholder="All"
                   options={
@@ -257,7 +242,7 @@ const Deployment = () => {
         </FormLabel>
         <Flex>
           <Input
-            placeholder="Search Deployment Group"
+            placeholder="Deployment Group Name"
             maxW="230px"
             mr={4}
             backgroundColor="white"
@@ -278,9 +263,7 @@ const Deployment = () => {
         </Flex>
       </Stack>
 
-      {loadingDeployments ? (
-        <Spinner size="xs" />
-      ) : (
+      {loadingDeployments ? null : ( // <Spinner size="xl" />
         <Table colorScheme="gray">
           <Thead backgroundColor="white">
             <Tr>

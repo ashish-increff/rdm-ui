@@ -129,10 +129,10 @@ const Clients = () => {
   };
 
   const selectedClientData = clients.find(
-    (client) => client.clientName === selectedClient
+    (client) => client.name === selectedClient
   );
   const filteredClients = clients.filter((client) =>
-    client.clientName.toLowerCase().includes(searchTerm.toLowerCase())
+    client.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleClientNameClick = (clientName: string) => {
@@ -204,18 +204,16 @@ const Clients = () => {
               <Tbody>
                 {filteredClients.length > 0 ? (
                   filteredClients.map((client) => (
-                    <Tr key={client.clientName}>
+                    <Tr key={client.name}>
                       <Td>
                         <Button
                           variant="link"
-                          onClick={() =>
-                            handleClientNameClick(client.clientName)
-                          }
+                          onClick={() => handleClientNameClick(client.name)}
                         >
-                          {client.clientName}
+                          {client.name}
                         </Button>
                       </Td>
-                      <Td>{client.deploymentGroup}</Td>
+                      <Td>{client.liveDeploymentGroup}</Td>
                       <Td>
                         <Tooltip label={client.primaryPocEmail} placement="top">
                           {client.primaryPocName}
@@ -232,10 +230,10 @@ const Clients = () => {
                       <Td>
                         <a
                           href={
-                            client.url.startsWith("http://") ||
-                            client.url.startsWith("https://")
-                              ? client.url
-                              : `http://${client.url}`
+                            client.domainUrl.startsWith("http://") ||
+                            client.domainUrl.startsWith("https://")
+                              ? client.domainUrl
+                              : `http://${client.domainUrl}`
                           }
                           target="_blank"
                           rel="noopener noreferrer"
@@ -252,7 +250,7 @@ const Clients = () => {
                       </Td>
                       <Td>{client.deploymentOnHold ? "Yes" : "No"}</Td>
                       <Td>{client.deploymentPriority}</Td>
-                      <Td>{client.isDisabled ? "Yes" : "No"}</Td>
+                      <Td>{client.isActive ? "Yes" : "No"}</Td>
                     </Tr>
                   ))
                 ) : (
@@ -267,7 +265,7 @@ const Clients = () => {
             <CustomMenu
               label="Client Name"
               selected={selectedClient}
-              options={clients.map((client) => client.clientName)}
+              options={clients.map((client) => client.name)}
               onChange={setSelectedClient}
             />
             {selectedClientData && (

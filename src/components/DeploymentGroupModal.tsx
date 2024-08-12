@@ -200,6 +200,8 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                 <Textarea
                   value={descriptionValue}
                   onChange={(e) => setDescriptionValue(e.target.value)}
+                  minHeight="60px"
+                  height="60px"
                 />
               </FormControl>
               <FormControl>
@@ -207,7 +209,8 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                 <Textarea
                   value={remarksValue}
                   onChange={(e) => setRemarksValue(e.target.value)}
-                  height="10px"
+                  minHeight="60px"
+                  height="60px"
                 />
               </FormControl>
               <FormControl>

@@ -1,6 +1,6 @@
 export const bulkUploadComponentFields = [
     {
-      field: "componentName",
+      field: "name",
       dataType: "String",
       description: "Name of the component",
       mandatory: "Yes",
@@ -8,8 +8,8 @@ export const bulkUploadComponentFields = [
     {
       field: "pocEmail",
       dataType: "String",
-      description: "Email of the point of contact",
-      mandatory: "No",
+      description: "Email of the POC",
+      mandatory: "Yes",
     },
   ];
 

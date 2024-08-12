@@ -5,16 +5,16 @@ export interface Component {
   }
 
 export interface Client {
-    clientName: string;
-    deploymentGroup: string;
-    url: string;
+    name: string;
+    liveDeploymentGroup: string;
+    domainUrl: string;
     deploymentOnHold: boolean;
     deploymentPriority: number;
     primaryPocName: string;
     primaryPocEmail: string;
     secondaryPocName: string;
     secondaryPocEmail: string;
-    isDisabled: boolean;
+    isActive: boolean;
     componentVersions: Record<string, string>;
   }
 

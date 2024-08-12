@@ -25,6 +25,7 @@ const Crumb = () => {
     releases: "Releases",
     deployments: "Deployments",
     "deployment-groups": "Deployment Groups",
+    "create-deployment": "Create Deployment",
     scripts: "Scripts",
     // Add more mappings as needed
   };

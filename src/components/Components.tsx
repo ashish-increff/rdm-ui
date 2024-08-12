@@ -90,7 +90,8 @@ const Components = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const dummyData = "name,pocEmail\nMANDATORY\nCOMPONENT_NAME,POC_EMAIL";
+    const dummyData =
+      "name,pocEmail\nMANDATORY,MANDATORY\nCOMPONENT_NAME,POC_EMAIL";
     const blob = new Blob([dummyData], { type: "text/csv;charset=utf-8;" });
     saveAs(blob, "sample-component-upload.csv");
   };

@@ -3,35 +3,34 @@ import {
   Box,
   Button,
   Input,
-  Grid,
-  FormControl,
-  FormLabel,
-  useTheme,
   Flex,
-  Text as ChakraText,
-  Stack,
+  Checkbox,
+  IconButton,
+  VStack,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  IconButton,
+  Spinner,
+  Stack,
+  useTheme,
 } from "@chakra-ui/react";
-import { FaEdit } from "react-icons/fa";
 import Select, { SingleValue } from "react-select";
+import { FaEdit } from "react-icons/fa";
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import deploymentGroupService from "../services/deployment-group-service";
 import DeploymentGroupModal from "./DeploymentGroupModal";
+import ToastManager from "../utils/ToastManager";
 import {
   Component,
   Release,
   SearchDeploymentGroup,
   DeploymentGroup,
 } from "../utils/Modal";
-import ToastManager from "../utils/ToastManager";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
 const DeploymentGroups = () => {
   const theme = useTheme();
@@ -44,22 +43,18 @@ const DeploymentGroups = () => {
     Record<string, boolean>
   >({});
   const [searchValue, setSearchValue] = useState("");
-  const [selectedReleases, setSelectedReleases] = useState<
-    Record<string, string>
-  >({});
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
-  ); // Always initialize as an empty array
-  const [loadingDeployments, setLoadingDeployments] = useState<boolean>(false); // State for loading
-
+  );
+  const [loadingDeployments, setLoadingDeployments] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchByVersion, setSearchByVersion] = useState(false);
+  const [componentReleaseGroups, setComponentReleaseGroups] = useState<
+    { id: number; component: string; release: string }[]
+  >([{ id: 1, component: "", release: "" }]);
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
-  const initialSelects = [
-    { id: 1, value1: "Component1", value2: "v1.0" },
-    { id: 2, value1: "Component2", value2: "v2.0" },
-  ];
 
   type OptionType = {
     value: string;
@@ -110,7 +105,7 @@ const DeploymentGroups = () => {
 
       setReleaseOptions((prevOptions) => ({
         ...prevOptions,
-        [componentName]: [{ value: "All", label: "All" }, ...options],
+        [componentName]: [...options],
       }));
     } catch (error) {
       ToastManager.error("Error Loading Releases", (error as Error).message);
@@ -122,22 +117,58 @@ const DeploymentGroups = () => {
     }
   };
 
+  const getFilteredComponents = (index: number) => {
+    const selectedComponents = componentReleaseGroups.map(
+      (group) => group.component
+    );
+
+    return components
+      .filter(
+        (component) =>
+          !selectedComponents.includes(component.name) ||
+          component.name === componentReleaseGroups[index].component
+      )
+      .map((component) => ({
+        value: component.name,
+        label: component.name,
+      }));
+  };
+
   const handleSelectChange = (
     selectedOption: SingleValue<OptionType>,
-    componentName: string
+    componentName: string,
+    index: number,
+    field: "component" | "release"
   ) => {
-    if (selectedOption) {
-      setSelectedReleases((prev) => ({
-        ...prev,
-        [componentName]:
-          selectedOption.value === "All" ? "All" : selectedOption.value,
-      }));
+    const newGroups = [...componentReleaseGroups];
+
+    if (field === "component") {
+      newGroups[index].component = selectedOption ? selectedOption.value : "";
+      newGroups[index].release = ""; // Reset release when component changes
     } else {
-      setSelectedReleases((prev) => ({
-        ...prev,
-        [componentName]: "All",
-      }));
+      newGroups[index].release = selectedOption ? selectedOption.value : "";
     }
+
+    setComponentReleaseGroups(newGroups);
+  };
+
+  const handleAddComponent = () => {
+    if (
+      !componentReleaseGroups.some(
+        (group) => !group.component || !group.release
+      )
+    ) {
+      setComponentReleaseGroups([
+        ...componentReleaseGroups,
+        { id: componentReleaseGroups.length + 1, component: "", release: "" },
+      ]);
+    }
+  };
+
+  const handleRemoveComponent = (id: number) => {
+    setComponentReleaseGroups(
+      componentReleaseGroups.filter((group) => group.id !== id)
+    );
   };
 
   const handleSubmit = async (type?: "release" | "name") => {
@@ -145,26 +176,26 @@ const DeploymentGroups = () => {
     let releasedVersions: Record<string, string> | null = null;
 
     if (type === "release") {
-      releasedVersions = Object.keys(selectedReleases).reduce((acc, key) => {
-        const selectedValue = selectedReleases[key];
-        if (selectedValue !== "All") {
-          const componentVersion = selectedValue.split(":")[0].trim();
-          acc[key] = componentVersion;
+      releasedVersions = componentReleaseGroups.reduce((acc, group) => {
+        if (group.release !== "") {
+          const componentVersion = group.release.split(":")[0].trim();
+          acc[group.component] = componentVersion;
         }
         return acc;
       }, {} as Record<string, string>);
     } else if (type === "name") {
       name = searchValue;
+      setSearchByVersion(false);
     }
 
-    setLoadingDeployments(true); // Start loading
+    setLoadingDeployments(true);
     try {
       const response =
         await deploymentGroupService.search<SearchDeploymentGroup>({
           name,
           releasedVersions,
         });
-      setDeploymentGroups(response.data || []); // Ensure response data is always an array
+      setDeploymentGroups(response.data || []);
       if (type === "name" || type === "release") {
         ToastManager.success(
           "Success",
@@ -177,8 +208,20 @@ const DeploymentGroups = () => {
         (error as Error).message
       );
     } finally {
-      setLoadingDeployments(false); // Stop loading
+      setLoadingDeployments(false);
     }
+  };
+
+  const handleCheckboxChange = () => {
+    if (!searchByVersion) {
+      // Checkbox is being checked, reset the selections
+      setComponentReleaseGroups([{ id: 1, component: "", release: "" }]);
+      setSearchValue("");
+    } else {
+      // Checkbox is being unchecked, fetch the default data
+      handleSubmit();
+    }
+    setSearchByVersion(!searchByVersion);
   };
 
   return (
@@ -188,64 +231,11 @@ const DeploymentGroups = () => {
       bg={theme.colors.gray[50]}
       borderRadius="md"
     >
-      {loadingComponents ? // <Spinner size="sm" />
-      null : (
-        <Grid
-          templateColumns={[
-            "repeat(1, 1fr)",
-            "repeat(4, 1fr)",
-            "repeat(6, 1fr)",
-          ]}
-          gap={4}
-          alignItems="start"
-          w="full"
-        >
-          {components.map((component, i) => (
-            <FormControl key={i}>
-              <FormLabel fontWeight="bold">{component.name}</FormLabel>
-              {loadingReleases[component.name] ? // <Spinner size="sm" />
-              null : (
-                <Select
-                  placeholder="All"
-                  options={
-                    releaseOptions[component.name] || [
-                      { value: "All", label: "All" },
-                    ]
-                  }
-                  isClearable
-                  isSearchable
-                  menuPlacement="auto"
-                  menuShouldScrollIntoView={true}
-                  onChange={(option) =>
-                    handleSelectChange(option, component.name)
-                  }
-                />
-              )}
-            </FormControl>
-          ))}
-
-          <Button
-            onClick={() => handleSubmit("release")}
-            colorScheme="blue"
-            alignSelf="end"
-            maxWidth="80px"
-          >
-            Search
-          </Button>
-        </Grid>
-      )}
-      <Flex justifyContent="center" alignItems="center" my={4}>
-        <ChakraText mx={2}>OR</ChakraText>
-      </Flex>
-
-      <Stack mb={4}>
-        <FormLabel fontWeight="bold" mb="0">
-          Name
-        </FormLabel>
+      <Stack spacing={4}>
         <Flex>
           <Input
-            placeholder="Search Deployment Group"
-            maxW="230px"
+            placeholder="Deployment Group Name"
+            maxW="220px"
             mr={4}
             backgroundColor="white"
             value={searchValue}
@@ -263,64 +253,153 @@ const DeploymentGroups = () => {
             Add Group
           </Button>
         </Flex>
+
+        <Flex alignItems="center">
+          <Checkbox
+            isChecked={searchByVersion}
+            onChange={handleCheckboxChange}
+            mr={2}
+            ml={2}
+            sx={{
+              "& .chakra-checkbox__control": {
+                borderColor: searchByVersion ? "transparent" : "black", // Black border when unchecked, transparent when checked
+                borderWidth: "2px", // Set the border width
+              },
+            }}
+          />
+          <span onClick={(e) => e.preventDefault()}>
+            Search By Released Version
+          </span>
+        </Flex>
+
+        {searchByVersion && (
+          <VStack spacing={4} align="start">
+            {componentReleaseGroups.map((group, index) => (
+              <Flex key={group.id} align="center" width="full">
+                <div style={{ width: "220px", marginRight: "10px" }}>
+                  <Select
+                    placeholder="Select Component"
+                    options={getFilteredComponents(index)}
+                    value={
+                      group.component
+                        ? { value: group.component, label: group.component }
+                        : null
+                    }
+                    onChange={(option) =>
+                      handleSelectChange(
+                        option,
+                        group.component,
+                        index,
+                        "component"
+                      )
+                    }
+                  />
+                </div>
+                <div style={{ width: "220px" }}>
+                  <Select
+                    placeholder="Select Release"
+                    options={releaseOptions[group.component] || []}
+                    value={
+                      group.release
+                        ? { value: group.release, label: group.release }
+                        : null
+                    }
+                    isDisabled={!group.component}
+                    onChange={(option) =>
+                      handleSelectChange(
+                        option,
+                        group.component,
+                        index,
+                        "release"
+                      )
+                    }
+                  />
+                </div>
+                {index > 0 && (
+                  <IconButton
+                    aria-label="Remove"
+                    icon={<DeleteIcon />}
+                    ml={2}
+                    onClick={() => handleRemoveComponent(group.id)}
+                  />
+                )}
+              </Flex>
+            ))}
+            <Flex width="full" align="center">
+              <Button
+                onClick={handleAddComponent}
+                leftIcon={<AddIcon />}
+                mr={2}
+                isDisabled={componentReleaseGroups.some(
+                  (group) => !group.component || !group.release
+                )}
+              >
+                Add Component
+              </Button>
+              <Button
+                onClick={() => handleSubmit("release")}
+                colorScheme="blue"
+                isDisabled={componentReleaseGroups.some(
+                  (group) => !group.component || !group.release
+                )}
+              >
+                Search
+              </Button>
+            </Flex>
+          </VStack>
+        )}
       </Stack>
 
-      {loadingDeployments ? // <Spinner size="xl" />
-      null : (
-        <Table colorScheme="gray">
-          <Thead backgroundColor="white">
+      <Table colorScheme="gray" mt="15px">
+        <Thead backgroundColor="white">
+          <Tr>
+            <Th boxShadow="md">Name</Th>
+            <Th boxShadow="md">Released Versions</Th>
+            <Th boxShadow="md">Description</Th>
+            <Th boxShadow="md">Remarks</Th>
+            <Th boxShadow="md">Action</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {loadingDeployments ? (
+            // You can show a loading message or leave this block empty to just show an empty table until data loads
             <Tr>
-              <Th boxShadow="md">Name</Th>
-              <Th boxShadow="md">Released Versions</Th>
-              <Th boxShadow="md">Description</Th>
-              <Th boxShadow="md">Remarks</Th>
-              <Th boxShadow="md">Action</Th>
+              <Td colSpan={5} textAlign="center">
+                Loading...
+              </Td>
             </Tr>
-          </Thead>
-          <Tbody>
-            {deploymentGroups.length === 0 ? (
-              <Tr>
-                <Td colSpan={5}>No matching Deployment Group Found</Td>
+          ) : (
+            deploymentGroups.map((group) => (
+              <Tr key={group.name} _hover={{ bg: "gray.100" }}>
+                <Td>{group.name}</Td>
+                <Td>
+                  {Object.entries(group.releasedVersions).map(
+                    ([key, value]) => (
+                      <Flex key={key}>
+                        <Box as="span" minW="100px">
+                          {key}
+                        </Box>
+                        <Box as="span">: {value}</Box>
+                      </Flex>
+                    )
+                  )}
+                </Td>
+                <Td>{group.description}</Td>
+                <Td>{group.remarks}</Td>
+                <Td>
+                  <Button
+                    size="sm"
+                    leftIcon={<FaEdit />}
+                    onClick={() => console.log("Edit")}
+                  ></Button>
+                </Td>
               </Tr>
-            ) : (
-              deploymentGroups.map((group, index) => (
-                <Tr key={index} _hover={{ bg: "gray.100" }}>
-                  {" "}
-                  {/* Row hover effect */}
-                  <Td>{group.name}</Td>
-                  <Td>
-                    {Object.entries(group.releasedVersions).map(
-                      ([key, value]) => (
-                        <Flex key={key}>
-                          <Box as="span" minW="100px">
-                            {key}
-                          </Box>
-                          <Box as="span">: {value}</Box>
-                        </Flex>
-                      )
-                    )}
-                  </Td>
-                  <Td>{group.description ? group.description : "-"}</Td>
-                  <Td>{group.remarks ? group.remarks : "-"}</Td>
-                  <Td>
-                    <IconButton
-                      aria-label="Edit"
-                      icon={<FaEdit />}
-                      size="sm"
-                      variant="ghost"
-                    />
-                  </Td>
-                </Tr>
-              ))
-            )}
-          </Tbody>
-        </Table>
-      )}
-      <DeploymentGroupModal
-        isOpen={isOpen}
-        onClose={closeModal}
-        modalHeader="Add Deployment Group"
-      />
+            ))
+          )}
+        </Tbody>
+      </Table>
+
+      <DeploymentGroupModal isOpen={isOpen} onClose={closeModal} />
     </Box>
   );
 };
