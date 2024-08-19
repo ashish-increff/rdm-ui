@@ -4,13 +4,6 @@ import {
   FormControl,
   FormLabel,
   HStack,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Button,
-  useTheme,
-  useColorMode,
   Table,
   Thead,
   Tbody,
@@ -19,116 +12,15 @@ import {
   Td,
   Spinner,
   useColorModeValue,
+  useTheme,
+  useColorMode,
 } from "@chakra-ui/react";
-import { ChevronDownIcon } from "@chakra-ui/icons";
+import Select from "react-select";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
 import { getTableStyles } from "./Styles";
 import { Component, Release } from "../utils/Modal";
-
-interface CustomMenuProps {
-  label: string;
-  selected: string | null;
-  options: string[];
-  onChange: (value: string) => void;
-  isDisabled?: boolean;
-}
-
-const CustomMenu: React.FC<CustomMenuProps> = ({
-  label,
-  selected,
-  options,
-  onChange,
-  isDisabled = false,
-}) => {
-  const theme = useTheme();
-  const { colorMode } = useColorMode();
-
-  return (
-    <FormControl width="200px" isDisabled={isDisabled}>
-      <FormLabel
-        mb={2}
-        color={
-          colorMode === "dark" ? theme.colors.white : theme.colors.gray[700]
-        }
-      >
-        {label}
-      </FormLabel>
-      <Menu>
-        <MenuButton
-          as={Button}
-          bg={
-            colorMode === "dark"
-              ? theme.colors.gray[800]
-              : theme.colors.gray[100]
-          }
-          borderColor={
-            colorMode === "dark"
-              ? theme.colors.gray[600]
-              : theme.colors.gray[300]
-          }
-          _hover={{
-            borderColor:
-              colorMode === "dark"
-                ? theme.colors.gray[500]
-                : theme.colors.gray[400],
-            bg:
-              colorMode === "dark"
-                ? theme.colors.gray[700]
-                : theme.colors.gray[200],
-          }}
-          _active={{
-            bg:
-              colorMode === "dark"
-                ? theme.colors.gray[600]
-                : theme.colors.gray[300],
-          }}
-          borderWidth="1px"
-          borderRadius="md"
-          textAlign="left"
-          width="100%"
-          rightIcon={<ChevronDownIcon />}
-          color={
-            colorMode === "dark" ? theme.colors.white : theme.colors.gray[700]
-          }
-          isDisabled={isDisabled}
-        >
-          {selected || `Select ${label}`}
-        </MenuButton>
-        <MenuList
-          bg={
-            colorMode === "dark" ? theme.colors.gray[800] : theme.colors.white
-          }
-          borderColor={theme.colors.gray[300]}
-          borderWidth="1px"
-          borderRadius="md"
-          boxShadow="md"
-        >
-          {options.map((option) => (
-            <MenuItem
-              key={option}
-              onClick={() => onChange(option)}
-              _hover={{
-                bg:
-                  colorMode === "dark"
-                    ? theme.colors.gray[600]
-                    : theme.colors.gray[100],
-              }}
-              color={
-                colorMode === "dark"
-                  ? theme.colors.white
-                  : theme.colors.gray[700]
-              }
-            >
-              {option}
-            </MenuItem>
-          ))}
-        </MenuList>
-      </Menu>
-    </FormControl>
-  );
-};
 
 const Releases = () => {
   const [components, setComponents] = useState<Component[]>([]);
@@ -172,7 +64,7 @@ const Releases = () => {
   };
 
   const filterReleases = (type: string | null) => {
-    if (type === "ALL" || type === null) {
+    if (type === null) {
       setFilteredReleases(releases);
     } else {
       setFilteredReleases(
@@ -199,38 +91,63 @@ const Releases = () => {
   return (
     <Box p={4} bg={useTheme().colors.background} color={useTheme().colors.text}>
       <HStack align="start" spacing={4}>
-        <CustomMenu
-          label="Component"
-          selected={selectedComponent}
-          options={components.map((c) => c.name)}
-          onChange={setSelectedComponent}
-        />
-        <CustomMenu
-          label="Release Type"
-          selected={selectedReleaseType}
-          options={["SPRINT", "FEATURE", "BUG_FIX", "ALL"]}
-          onChange={setSelectedReleaseType}
-          isDisabled={!selectedComponent}
-        />
+        <FormControl width="200px">
+          <FormLabel>Component</FormLabel>
+          <Select
+            value={
+              selectedComponent
+                ? { label: selectedComponent, value: selectedComponent }
+                : null
+            }
+            onChange={(option) =>
+              setSelectedComponent(option ? option.value : null)
+            }
+            options={components.map((c) => ({
+              label: c.name,
+              value: c.name,
+            }))}
+          />
+        </FormControl>
+        <FormControl width="200px" isDisabled={!selectedComponent}>
+          <FormLabel>Release Type</FormLabel>
+
+          <Select
+            value={
+              selectedReleaseType
+                ? { label: selectedReleaseType, value: selectedReleaseType }
+                : null
+            }
+            onChange={(option) =>
+              setSelectedReleaseType(option ? option.value : null)
+            }
+            options={[
+              { label: "SPRINT", value: "SPRINT" },
+              { label: "FEATURE", value: "FEATURE" },
+              { label: "BUG_FIX", value: "BUG_FIX" },
+            ]}
+            isClearable
+            isDisabled={!selectedComponent}
+          />
+        </FormControl>
       </HStack>
       <Box mt={8}>
         {loading ? (
           <Spinner size="xl" />
         ) : (
-          <Table colorScheme={colorScheme} sx={tableStyles}>
-            <Thead>
+          <Table colorScheme="gray">
+            <Thead backgroundColor="white">
               <Tr>
-                <Th>Name</Th>
-                <Th>Version</Th>
-                <Th>Release Type</Th>
-                <Th>Description</Th>
-                <Th>Contains Bug</Th>
+                <Th boxShadow="md">Name</Th>
+                <Th boxShadow="md">Version</Th>
+                <Th boxShadow="md">Release Type</Th>
+                <Th boxShadow="md">Description</Th>
+                <Th boxShadow="md">Contains Bug</Th>
               </Tr>
             </Thead>
             <Tbody>
               {filteredReleases.length > 0 ? (
                 filteredReleases.map((release, index) => (
-                  <Tr key={index}>
+                  <Tr key={index} _hover={{ bg: "gray.100" }}>
                     <Td>{release.name}</Td>
                     <Td>{release.componentVersion}</Td>
                     <Td>{release.releaseType}</Td>

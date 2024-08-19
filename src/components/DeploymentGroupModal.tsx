@@ -7,7 +7,6 @@ import {
   ModalHeader,
   ModalFooter,
   ModalBody,
-  Select,
   VStack,
   HStack,
   IconButton,
@@ -21,6 +20,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import Select, { SingleValue } from "react-select";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
@@ -91,14 +91,16 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
   const handleSelectChange = (
     id: number,
     field: "value1" | "value2",
-    value: string
+    value: SingleValue<{ label: string; value: string }>
   ) => {
+    const selectedValue = value ? value.value : "";
+
     setSelectValues((prevSelectValues) =>
       prevSelectValues.map((select) =>
         select.id === id
           ? {
               ...select,
-              [field]: value,
+              [field]: selectedValue,
               ...(field === "value1" && { value2: "" }),
             }
           : select
@@ -106,7 +108,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     );
 
     if (field === "value1") {
-      fetchReleases(value);
+      fetchReleases(selectedValue);
     }
   };
 
@@ -128,7 +130,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     setDescriptionValue("");
     setRemarksValue("");
     setSelectValues([{ id: 1, value1: "", value2: "" }]);
-    setReleasesMap(new Map()); // Resetting the releases map as well
+    setReleasesMap(new Map());
   };
 
   const handleSubmit = async () => {
@@ -168,14 +170,14 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       closeOnOverlayClick={false}
-      size="lg"
+      size="xl"
     >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>{modalHeader}</ModalHeader>
         <ModalBody>
           <Box
-            maxW="md"
+            maxW="lg"
             mx="auto"
             p={6}
             borderWidth={1}
@@ -193,6 +195,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                 <Input
                   value={deploymentName}
                   onChange={(e) => setDeploymentName(e.target.value)}
+                  autoComplete="off"
                 />
               </FormControl>
               <FormControl>
@@ -202,6 +205,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                   onChange={(e) => setDescriptionValue(e.target.value)}
                   minHeight="60px"
                   height="60px"
+                  autoComplete="off"
                 />
               </FormControl>
               <FormControl>
@@ -211,6 +215,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                   onChange={(e) => setRemarksValue(e.target.value)}
                   minHeight="60px"
                   height="60px"
+                  autoComplete="off"
                 />
               </FormControl>
               <FormControl>
@@ -223,19 +228,21 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                 {selectValues.map((select, index) => (
                   <Box key={select.id}>
                     <HStack spacing={4}>
-                      <VStack w="100%">
+                      <div style={{ width: "200px" }}>
                         <Select
-                          placeholder={!select.value1 ? "Select Component" : ""}
-                          value={select.value1}
-                          onChange={(e) =>
-                            handleSelectChange(
-                              select.id,
-                              "value1",
-                              e.target.value
-                            )
+                          placeholder="Select Component"
+                          value={
+                            select.value1
+                              ? {
+                                  label: select.value1,
+                                  value: select.value1,
+                                }
+                              : null
                           }
-                        >
-                          {components
+                          onChange={(e) =>
+                            handleSelectChange(select.id, "value1", e)
+                          }
+                          options={components
                             .filter(
                               (component) =>
                                 !selectValues.some(
@@ -244,67 +251,63 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                                     otherSelect.value1 === component.name
                                 )
                             )
-                            .map((component) => (
-                              <option
-                                key={component.name}
-                                value={component.name}
-                              >
-                                {component.name}
-                              </option>
-                            ))}
-                        </Select>
-                      </VStack>
-                      <VStack w="100%">
-                        <Select
-                          placeholder={!select.value2 ? "Select Version" : ""}
-                          value={select.value2}
-                          onChange={(e) =>
-                            handleSelectChange(
-                              select.id,
-                              "value2",
-                              e.target.value
-                            )
-                          }
-                          isDisabled={!select.value1}
-                        >
-                          {(releasesMap.get(select.value1) || []).map(
-                            (release) => (
-                              <option
-                                key={release.componentVersion}
-                                value={release.componentVersion}
-                              >
-                                {release.componentVersion +
-                                  " : " +
-                                  release.name}
-                              </option>
-                            )
-                          )}
-                        </Select>
-                      </VStack>
-                      {selectValues.length > 1 && (
-                        <IconButton
-                          aria-label="Delete select group"
-                          icon={<DeleteIcon />}
-                          onClick={() => removeSelectGroup(select.id)}
+                            .map((component) => ({
+                              label: component.name,
+                              value: component.name,
+                            }))}
                         />
-                      )}
+                      </div>
+                      <div style={{ width: "200px" }}>
+                        <Select
+                          placeholder="Select Version"
+                          value={
+                            select.value2
+                              ? {
+                                  label: select.value2,
+                                  value: select.value2,
+                                }
+                              : null
+                          }
+                          onChange={(e) =>
+                            handleSelectChange(select.id, "value2", e)
+                          }
+                          options={(releasesMap.get(select.value1) || []).map(
+                            (release) => ({
+                              label:
+                                release.componentVersion + " : " + release.name,
+                              value: release.componentVersion,
+                            })
+                          )}
+                          isDisabled={!select.value1}
+                        />
+                      </div>
+                      <div style={{ width: "20px" }}>
+                        {index > 0 && (
+                          <IconButton
+                            aria-label="Delete select group"
+                            icon={<DeleteIcon />}
+                            onClick={() => removeSelectGroup(select.id)}
+                          />
+                        )}
+                      </div>
                     </HStack>
                     {index < selectValues.length - 1 && (
                       <Spacer height="10px" />
                     )}
                   </Box>
                 ))}
+
                 <Spacer height="20px" />
                 <Button
                   leftIcon={<AddIcon />}
-                  colorScheme="teal"
                   variant="solid"
+                  colorScheme="teal"
                   onClick={addMoreComponents}
                   isDisabled={selectValues.some(
                     (select) => !select.value1 || !select.value2
                   )}
                 >
-                  Add Component
+                  Component
                 </Button>
               </FormControl>
             </VStack>

@@ -30,9 +30,16 @@ class HttpService {
   search<T>(entity: T) {
     return apiClient.post(this.endpoint + "/search", entity);
   }
+  searchByComponent<T>(entity: T) {
+    return apiClient.post(this.endpoint + "/search-by-component", entity);
+  }
   
   bulkCreate<T>(entities: T[]) {
-    return apiClient.post(this.endpoint, entities);
+    return apiClient.post(this.endpoint, entities)
+    .catch(error => {
+      console.error('Error in bulkCreate:', error);
+      throw error;
+    });
   }
 
   update<T extends Entity>(entity: T) {

@@ -16,22 +16,22 @@ export const bulkUploadComponentFields = [
 
 export const bulkAddClientsFields = [
   {
-    field: "clientName",
+    field: "name",
     dataType: "String",
     description: "Name of the client",
     mandatory: "Yes",
   },
   {
-    field: "deploymentGroup",
+    field: "liveDeploymentGroup",
     dataType: "String",
     description: "Deployment group which is deplyoed in client",
     mandatory: "Yes",
   },
   {
-    field: "url",
+    field: "domainUrl",
     dataType: "String",
     description: "Domain of the client",
-    mandatory: "No",
+    mandatory: "Yes",
   },
   {
     field: "deploymentOnHold",
@@ -46,22 +46,10 @@ export const bulkAddClientsFields = [
     mandatory: "No",
   },
   {
-    field: "primaryPocName",
-    dataType: "String",
-    description: "Name of the Primary point of contact",
-    mandatory: "No",
-  },
-  {
     field: "primaryPocEmail",
     dataType: "String",
     description: "Email of the  Primary point of contact",
-    mandatory: "No",
-  },
-  {
-    field: "secondaryPocName",
-    dataType: "String",
-    description: "Name of the Secondary point of contact",
-    mandatory: "No",
+    mandatory: "Yes",
   },
   {
     field: "secondaryPocEmail",
@@ -70,29 +58,29 @@ export const bulkAddClientsFields = [
     mandatory: "No",
   },
   {
-    field: "isDisabled",
+    field: "isActive",
     dataType: "Boolean",
-    description: "Whether Client is disabled or not",
+    description: "Whether Client is active or not",
     mandatory: "No",
   },
   {
     field: "componentVersions",
     dataType: "JSONObject",
     description: "Component versions of the client",
-    mandatory: "No",
+    mandatory: "Yes",
   },
 
 ];
 
 export const bulkUpdateClientsFields = [
   {
-    field: "clientName",
+    field: "name",
     dataType: "String",
     description: "Name of the client",
     mandatory: "Yes",
   },
   {
-    field: "url",
+    field: "domainUrl",
     dataType: "String",
     description: "Domain of the client",
     mandatory: "No",
@@ -110,21 +98,9 @@ export const bulkUpdateClientsFields = [
     mandatory: "No",
   },
   {
-    field: "primaryPocName",
-    dataType: "String",
-    description: "Name of the Primary point of contact",
-    mandatory: "No",
-  },
-  {
     field: "primaryPocEmail",
     dataType: "String",
     description: "Email of the  Primary point of contact",
-    mandatory: "No",
-  },
-  {
-    field: "secondaryPocName",
-    dataType: "String",
-    description: "Name of the Secondary point of contact",
     mandatory: "No",
   },
   {
@@ -134,9 +110,9 @@ export const bulkUpdateClientsFields = [
     mandatory: "No",
   },
   {
-    field: "isDisabled",
+    field: "isActive",
     dataType: "Boolean",
-    description: "Whether Client is disabled or not",
+    description: "Whether Client is active or not",
     mandatory: "No",
   },
 

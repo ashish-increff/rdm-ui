@@ -154,12 +154,7 @@ const Scripts = () => {
   );
 
   return (
-    <Box
-      padding="4"
-      boxShadow="lg"
-      bg={theme.colors.gray[50]}
-      borderRadius="md"
-    >
+    <Box padding="4" borderRadius="md">
       <Grid templateColumns="repeat(4, 1fr)" gap={4} mb={4}>
         <FormControl>
           <FormLabel fontWeight="bold">Source Deployment Group</FormLabel>
@@ -246,7 +241,7 @@ const Scripts = () => {
                     rel="noopener noreferrer"
                     style={{ color: "blue" }}
                   >
-                    {script.link}
+                    {script.link.split("/").pop()}
                   </a>
                 </Td>
               </Tr>

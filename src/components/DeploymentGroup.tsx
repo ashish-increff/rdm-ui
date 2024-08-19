@@ -17,9 +17,7 @@ import {
   Stack,
   useTheme,
 } from "@chakra-ui/react";
-import Select, { SingleValue } from "react-select";
 import { FaEdit } from "react-icons/fa";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import deploymentGroupService from "../services/deployment-group-service";
@@ -31,6 +29,7 @@ import {
   SearchDeploymentGroup,
   DeploymentGroup,
 } from "../utils/Modal";
+import SearchByReleasedVersion from "./SearchByReleasedVersion";
 
 const DeploymentGroups = () => {
   const theme = useTheme();
@@ -117,60 +116,6 @@ const DeploymentGroups = () => {
     }
   };
 
-  const getFilteredComponents = (index: number) => {
-    const selectedComponents = componentReleaseGroups.map(
-      (group) => group.component
-    );
-
-    return components
-      .filter(
-        (component) =>
-          !selectedComponents.includes(component.name) ||
-          component.name === componentReleaseGroups[index].component
-      )
-      .map((component) => ({
-        value: component.name,
-        label: component.name,
-      }));
-  };
-
-  const handleSelectChange = (
-    selectedOption: SingleValue<OptionType>,
-    componentName: string,
-    index: number,
-    field: "component" | "release"
-  ) => {
-    const newGroups = [...componentReleaseGroups];
-
-    if (field === "component") {
-      newGroups[index].component = selectedOption ? selectedOption.value : "";
-      newGroups[index].release = ""; // Reset release when component changes
-    } else {
-      newGroups[index].release = selectedOption ? selectedOption.value : "";
-    }
-
-    setComponentReleaseGroups(newGroups);
-  };
-
-  const handleAddComponent = () => {
-    if (
-      !componentReleaseGroups.some(
-        (group) => !group.component || !group.release
-      )
-    ) {
-      setComponentReleaseGroups([
-        ...componentReleaseGroups,
-        { id: componentReleaseGroups.length + 1, component: "", release: "" },
-      ]);
-    }
-  };
-
-  const handleRemoveComponent = (id: number) => {
-    setComponentReleaseGroups(
-      componentReleaseGroups.filter((group) => group.id !== id)
-    );
-  };
-
   const handleSubmit = async (type?: "release" | "name") => {
     let name: string | null = null;
     let releasedVersions: Record<string, string> | null = null;
@@ -212,25 +157,22 @@ const DeploymentGroups = () => {
     }
   };
 
-  const handleCheckboxChange = () => {
-    if (!searchByVersion) {
-      // Checkbox is being checked, reset the selections
-      setComponentReleaseGroups([{ id: 1, component: "", release: "" }]);
-      setSearchValue("");
-    } else {
-      // Checkbox is being unchecked, fetch the default data
-      handleSubmit();
+  const handleSearchByReleasedVersion = async (
+    releasedVersions: Record<string, string>
+  ) => {
+    try {
+      const response = await deploymentGroupService.search({
+        releasedVersions,
+      });
+      // handle the response as needed
+      ToastManager.success("Success", "Search completed successfully.");
+    } catch (error) {
+      ToastManager.error("Error during search", (error as Error).message);
     }
-    setSearchByVersion(!searchByVersion);
   };
 
   return (
-    <Box
-      padding="4"
-      boxShadow="lg"
-      bg={theme.colors.gray[50]}
-      borderRadius="md"
-    >
+    <Box padding="4" boxShadow="lg" borderRadius="md">
       <Stack spacing={4}>
         <Flex>
           <Input
@@ -249,105 +191,15 @@ const DeploymentGroups = () => {
           >
             Search
           </Button>
-          <Button colorScheme="green" onClick={openModal}>
+          <Button colorScheme="teal" onClick={openModal}>
             Add Group
           </Button>
         </Flex>
 
-        <Flex alignItems="center">
-          <Checkbox
-            isChecked={searchByVersion}
-            onChange={handleCheckboxChange}
-            mr={2}
-            ml={2}
-            sx={{
-              "& .chakra-checkbox__control": {
-                borderColor: searchByVersion ? "transparent" : "black", // Black border when unchecked, transparent when checked
-                borderWidth: "2px", // Set the border width
-              },
-            }}
-          />
-          <span onClick={(e) => e.preventDefault()}>
-            Search By Released Version
-          </span>
-        </Flex>
-
-        {searchByVersion && (
-          <VStack spacing={4} align="start">
-            {componentReleaseGroups.map((group, index) => (
-              <Flex key={group.id} align="center" width="full">
-                <div style={{ width: "220px", marginRight: "10px" }}>
-                  <Select
-                    placeholder="Select Component"
-                    options={getFilteredComponents(index)}
-                    value={
-                      group.component
-                        ? { value: group.component, label: group.component }
-                        : null
-                    }
-                    onChange={(option) =>
-                      handleSelectChange(
-                        option,
-                        group.component,
-                        index,
-                        "component"
-                      )
-                    }
-                  />
-                </div>
-                <div style={{ width: "220px" }}>
-                  <Select
-                    placeholder="Select Release"
-                    options={releaseOptions[group.component] || []}
-                    value={
-                      group.release
-                        ? { value: group.release, label: group.release }
-                        : null
-                    }
-                    isDisabled={!group.component}
-                    onChange={(option) =>
-                      handleSelectChange(
-                        option,
-                        group.component,
-                        index,
-                        "release"
-                      )
-                    }
-                  />
-                </div>
-                {index > 0 && (
-                  <IconButton
-                    aria-label="Remove"
-                    icon={<DeleteIcon />}
-                    ml={2}
-                    onClick={() => handleRemoveComponent(group.id)}
-                  />
-                )}
-              </Flex>
-            ))}
-            <Flex width="full" align="center">
-              <Button
-                onClick={handleAddComponent}
-                leftIcon={<AddIcon />}
-                mr={2}
-                isDisabled={componentReleaseGroups.some(
-                  (group) => !group.component || !group.release
-                )}
-              >
-                Add Component
-              </Button>
-              <Button
-                onClick={() => handleSubmit("release")}
-                colorScheme="blue"
-                isDisabled={componentReleaseGroups.some(
-                  (group) => !group.component || !group.release
-                )}
-              >
-                Search
-              </Button>
-            </Flex>
-          </VStack>
-        )}
+        <SearchByReleasedVersion
+          checkboxLabel="Search By Released Version"
+          onSearch={handleSearchByReleasedVersion}
+        />
       </Stack>
 
       <Table colorScheme="gray" mt="15px">
@@ -384,8 +236,8 @@ const DeploymentGroups = () => {
                     )
                   )}
                 </Td>
-                <Td>{group.description}</Td>
-                <Td>{group.remarks}</Td>
+                <Td>{group.description ? group.description : "-"}</Td>
+                <Td>{group.remarks ? group.remarks : "-"}</Td>
                 <Td>
                   <Button
                     size="sm"

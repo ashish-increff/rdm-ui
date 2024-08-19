@@ -81,9 +81,7 @@ const Navbar = () => {
         finalFocusRef={btnRef}
       >
         <DrawerOverlay />
-        <DrawerContent
-          sx={{ ...drawerContentStyles, backgroundColor: drawerContentBg }}
-        >
+        <DrawerContent sx={{ ...drawerContentStyles }}>
           <DrawerCloseButton />
           <DrawerHeader sx={drawerHeaderStyles}>All Screens</DrawerHeader>
           <DrawerBody sx={drawerBodyStyles}>

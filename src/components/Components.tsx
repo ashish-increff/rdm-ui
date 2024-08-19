@@ -13,7 +13,6 @@ import {
   Th,
   Thead,
   Tr,
-  useColorModeValue,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -28,7 +27,6 @@ import {
   VStack,
   Heading,
   Text,
-  useColorMode,
 } from "@chakra-ui/react";
 import componentService from "../services/component-service";
 import { saveAs } from "file-saver";
@@ -36,7 +34,6 @@ import Papa from "papaparse";
 import InfoPopover from "./InfoPopover";
 import { bulkUploadComponentFields } from "./InformativeFields";
 import ToastManager from "../utils/ToastManager"; // Import the ToastManager
-import { getTableStyles } from "./Styles";
 import { Component } from "../utils/Modal";
 
 const Components = () => {
@@ -46,9 +43,6 @@ const Components = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [uploadDisabled, setUploadDisabled] = useState(true);
-
-  const { colorMode } = useColorMode();
-  const tableStyles = getTableStyles(colorMode);
 
   const fetchComponents = async () => {
     try {
@@ -68,11 +62,6 @@ const Components = () => {
   useEffect(() => {
     setUploadDisabled(!selectedFile || fileErrors.length > 0);
   }, [selectedFile, fileErrors]);
-
-  const bgColor = useColorModeValue("white", "gray.800");
-  const colorScheme = useColorModeValue("blue", "teal");
-  const inputColor = useColorModeValue("black", "white");
-  const placeholderColor = useColorModeValue("gray.500", "gray.300");
 
   const filteredComponents = components.filter((component) =>
     component.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -162,6 +151,7 @@ const Components = () => {
                 "Successfully updated components."
               );
             } else {
+              console.log("Adding components:", components);
               await componentService.bulkCreate(components);
               ToastManager.success(
                 "Components Added",
@@ -195,29 +185,31 @@ const Components = () => {
   };
 
   return (
-    <Box padding="4" boxShadow="lg" bg={bgColor}>
+    <Box padding="4" borderRadius="md">
       <HStack marginBottom="4">
         <Input
           placeholder="Search Component"
           maxW="250px"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          sx={{
-            "::placeholder": {
-              color: placeholderColor,
-            },
-          }}
+          backgroundColor="white"
         />
         <Button colorScheme="blue" onClick={handleManageClick}>
           Manage Components
         </Button>
       </HStack>
-      <Table colorScheme={colorScheme} sx={tableStyles}>
-        <Thead>
+      <Table colorScheme="gray">
+        <Thead backgroundColor="white">
           <Tr>
-            <Th fontWeight="bold">Component Name</Th>
-            <Th fontWeight="bold">POC Name</Th>
-            <Th fontWeight="bold">POC Email</Th>
+            <Th boxShadow="md" fontWeight="bold">
+              Component Name
+            </Th>
+            <Th boxShadow="md" fontWeight="bold">
+              POC Name
+            </Th>
+            <Th boxShadow="md" fontWeight="bold">
+              POC Email
+            </Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -227,7 +219,7 @@ const Components = () => {
             </Tr>
           ) : (
             filteredComponents.map((component, index) => (
-              <Tr key={index}>
+              <Tr key={index} _hover={{ bg: "gray.100" }}>
                 <Td>{component.name}</Td>
                 <Td>{component.pocName ? component.pocName : "-"}</Td>
                 <Td>{component.pocEmail ? component.pocEmail : "-"}</Td>
@@ -265,7 +257,6 @@ const Components = () => {
                           type="file"
                           accept=".csv"
                           p={1}
-                          borderColor="gray.300"
                           borderRadius="md"
                           onClick={(event) => {
                             event.currentTarget.value = "";
@@ -309,14 +300,12 @@ const Components = () => {
                         </Box>
                       )}
                       <Flex justifyContent="flex-end" mt={4}>
-                        <Button colorScheme="gray" onClick={handleCancel}>
-                          Cancel
-                        </Button>
+                        <Button onClick={handleCancel}>Cancel</Button>
                         <Button
-                          colorScheme="blue"
                           ml={4}
                           isDisabled={uploadDisabled} // Disable based on the state
                           onClick={() => handleFileUpload("add")}
+                          colorScheme="blue"
                         >
                           Upload
                         </Button>
@@ -324,6 +313,7 @@ const Components = () => {
                     </VStack>
                   </Box>
                 </TabPanel>
+
                 <TabPanel>
                   <Box
                     maxW="md"
@@ -335,14 +325,13 @@ const Components = () => {
                   >
                     <VStack spacing={4} align="stretch">
                       <Heading as="h3" size="sm">
-                        Upload Component(s)
+                        Update Component(s)
                       </Heading>
                       <FormControl>
                         <Input
                           type="file"
                           accept=".csv"
                           p={1}
-                          borderColor="gray.300"
                           borderRadius="md"
                           onClick={(event) => {
                             event.currentTarget.value = "";
@@ -386,14 +375,12 @@ const Components = () => {
                         </Box>
                       )}
                       <Flex justifyContent="flex-end" mt={4}>
-                        <Button colorScheme="gray" onClick={handleCancel}>
-                          Cancel
-                        </Button>
+                        <Button onClick={handleCancel}>Cancel</Button>
                         <Button
-                          colorScheme="blue"
                           ml={4}
                           isDisabled={uploadDisabled} // Disable based on the state
                           onClick={() => handleFileUpload("update")}
+                          colorScheme="blue"
                         >
                           Upload
                         </Button>
