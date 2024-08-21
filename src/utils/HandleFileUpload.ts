@@ -2,6 +2,7 @@ import Papa from "papaparse";
 import ToastManager from "./ToastManager";
 import { AxiosResponse } from "axios";
 import clientService from "../services/client-service";
+import { handleError } from "./ErrorHandler";
 
 interface FileUploadOptions {
   selectedFile: File | null;
@@ -149,8 +150,9 @@ export const HandleFileUpload = async (options: FileUploadOptions) => {
           handleCancel();
         } catch (error) {
           console.error("Error during service call:", error);
-          setFileErrors([(error as Error).message]);
-          ToastManager.error("Error Uploading File", (error as Error).message);
+          const errorMessage = handleError(error, "Error Uploading File");
+          setFileErrors([errorMessage]);
+        ToastManager.error("Error ", errorMessage);
         }
       }
     },

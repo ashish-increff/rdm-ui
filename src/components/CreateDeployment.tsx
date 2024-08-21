@@ -140,7 +140,7 @@ const CreateDeployment = () => {
         {clientSelection === "selected" && (
           <VStack align="start" w="100%">
             {/* Headings for the select groups */}
-            <HStack spacing={4} align="center" w="100%" pl="190px">
+            <HStack spacing={4} align="center" w="100%" pl="195px">
               <Box flex="2" textAlign="center">
                 <FormLabel fontWeight="bold">Clients</FormLabel>
               </Box>
@@ -158,7 +158,7 @@ const CreateDeployment = () => {
                 spacing={4}
                 align="center"
                 w="100%"
-                pl="185px"
+                pl="195px"
               >
                 <Box flex="2">
                   <Select
@@ -230,7 +230,7 @@ const CreateDeployment = () => {
                 )}
               </HStack>
             ))}
-            <HStack mt={4} pl="185px">
+            <HStack mt={4} pl="195px">
               <Button
                 leftIcon={<AddIcon />}
                 colorScheme="teal"

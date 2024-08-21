@@ -47,6 +47,7 @@ import { CustomInput, CustomTh } from "../utils/CustomComponents";
 import { HandleFileUpload } from "../utils/HandleFileUpload";
 import { saveAs } from "file-saver";
 import componentService from "../services/component-service";
+import { handleError } from "../utils/ErrorHandler";
 
 const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -70,10 +71,8 @@ const Clients = () => {
         const response = await clientService.getAll().request;
         setClients(response.data as Client[]);
       } catch (error) {
-        ToastManager.error(
-          "Error fetching clients",
-          "There was an issue fetching the clients data."
-        );
+        const errorMessage = handleError(error, "Error Uploading File");
+        ToastManager.error("Error fetching clients", errorMessage);
       }
     };
 
@@ -93,10 +92,8 @@ const Clients = () => {
       setClients(response.data as Client[]);
       ToastManager.success("Success", "Search completed successfully.");
     } catch (error) {
-      ToastManager.error(
-        "Search Error",
-        "There was an issue performing the search."
-      );
+      const errorMessage = handleError(error, "Error Uploading File");
+      ToastManager.error("Error fetching clients", errorMessage);
     }
   };
   const handleSearchWithoutParam = async () => {
@@ -105,10 +102,8 @@ const Clients = () => {
       setClients(response.data as Client[]);
       setIsModalOpen(false);
     } catch (error) {
-      ToastManager.error(
-        "Search Error",
-        "There was an issue performing the search."
-      );
+      const errorMessage = handleError(error, "Error Uploading File");
+      ToastManager.error("Error fetching clients", errorMessage);
     }
   };
 
@@ -166,7 +161,8 @@ const Clients = () => {
       resetForm();
       ToastManager.success("Success", "Search completed successfully.");
     } catch (error) {
-      ToastManager.error("Error during search", (error as Error).message);
+      const errorMessage = handleError(error, "Error Uploading File");
+      ToastManager.error("Error fetching clients", errorMessage);
     }
   };
   const [resetKey, setResetKey] = useState(0);
@@ -279,7 +275,7 @@ const Clients = () => {
         <Thead backgroundColor="white">
           <Tr>
             <CustomTh>Name</CustomTh>
-            <CustomTh>Component : Version</CustomTh>
+            <CustomTh>Components</CustomTh>
             <CustomTh>
               Live <br />
               Deployment Group
@@ -498,6 +494,19 @@ const Clients = () => {
                           color="teal.500"
                         />
                       </Flex>
+                      {fileErrors.length > 0 && (
+                        <Box mt={4} color="red.500">
+                          <Text fontWeight="bold">
+                            Note: After fixing problems, please re-attach the
+                            file again
+                          </Text>
+                          <Box mt={2}>
+                            {fileErrors.map((error, index) => (
+                              <Text key={index}>{error}</Text>
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
                     </FormControl>
                     <HStack justifyContent="flex-end" mt={4}>
                       <Button onClick={handleCloseModal}>Cancel</Button>

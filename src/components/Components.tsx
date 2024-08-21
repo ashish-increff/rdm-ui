@@ -35,6 +35,8 @@ import InfoPopover from "./InfoPopover";
 import { bulkUploadComponentFields } from "./InformativeFields";
 import ToastManager from "../utils/ToastManager"; // Import the ToastManager
 import { Component } from "../utils/Modal";
+import axios from "axios";
+import { handleError } from "../utils/ErrorHandler";
 
 const Components = () => {
   const [components, setComponents] = useState<Component[]>([]);
@@ -51,7 +53,8 @@ const Components = () => {
       setComponents(response.data);
     } catch (error) {
       console.error(error);
-      ToastManager.error("Error Loading Components", (error as Error).message);
+      const errorMessage = handleError(error, "Error Uploading File");
+      ToastManager.error("Error Loading Components", errorMessage);
     }
   };
 
@@ -159,14 +162,12 @@ const Components = () => {
               );
             }
             fetchComponents();
-            handleCancel(); // Call handleCancel to reset the form and close the modal
+            handleCancel();
           } catch (error) {
-            console.error(error);
-            setFileErrors([(error as Error).message]);
-            ToastManager.error(
-              "Error Uploading File",
-              (error as Error).message
-            );
+            const errorMessage = handleError(error, "Error Uploading File");
+
+            setFileErrors([errorMessage]);
+            ToastManager.error("Error Uploading File", errorMessage);
           }
         }
       },

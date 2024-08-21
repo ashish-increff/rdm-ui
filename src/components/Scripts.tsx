@@ -278,7 +278,6 @@ const Scripts = () => {
                     value: group.name,
                     label: group.name,
                   }))}
-                  isClearable
                   onChange={handleSelectChange(setModalSourceGroup)}
                   value={
                     modalSourceGroup
@@ -297,7 +296,6 @@ const Scripts = () => {
                     value: group.name,
                     label: group.name,
                   }))}
-                  isClearable
                   onChange={handleSelectChange(setModalDestinationGroup)}
                   value={
                     modalDestinationGroup
@@ -315,7 +313,6 @@ const Scripts = () => {
                 </FormLabel>
                 <Select
                   options={scriptTypes}
-                  isClearable
                   onChange={handleSelectChange(setModalScriptType)}
                   value={
                     modalScriptType

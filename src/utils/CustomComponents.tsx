@@ -11,5 +11,5 @@ export const CustomInput: React.FC<InputProps> = (props) => {
 };
 
 export const CustomTh: React.FC<TableColumnHeaderProps> = (props) => {
-  return <Th fontWeight="bold" {...props} />;
+  return <Th boxShadow="md" {...props} />;
 };
