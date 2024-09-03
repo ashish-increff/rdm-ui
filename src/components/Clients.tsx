@@ -45,9 +45,9 @@ import ToastManager from "../utils/ToastManager";
 import SearchByReleasedVersion from "./SearchByReleasedVersion";
 import { CustomInput, CustomTh } from "../utils/CustomComponents";
 import { HandleFileUpload } from "../utils/HandleFileUpload";
-import { saveAs } from "file-saver";
 import componentService from "../services/component-service";
 import { handleError } from "../utils/ErrorHandler";
+import { FaExternalLinkAlt } from "react-icons/fa";
 
 const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -64,6 +64,19 @@ const Clients = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [uploadDisabled, setUploadDisabled] = useState(true);
+  const [show, setShow] = useState<{ [key: string]: boolean }>({});
+  const [searchButtonDisabled, setSearchButtonDisabled] = useState(false);
+
+  const handleToggle = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    name: string
+  ) => {
+    event.preventDefault();
+    setShow((prevState: { [key: string]: boolean }) => ({
+      ...prevState,
+      [name]: !prevState[name],
+    }));
+  };
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -179,7 +192,14 @@ const Clients = () => {
   const onUncheck = () => {
     resetForm();
     handleSearchWithoutParam();
+    setSearchButtonDisabled(false);
   };
+
+  const onCheck = () => {
+    setSearchButtonDisabled(true);
+    console.log("Disabled True");
+  };
+
   const handleCancel = () => {
     setIsOpen(false);
     setSelectedFile(null);
@@ -257,6 +277,7 @@ const Clients = () => {
             mr={4}
             ml={4}
             mt={3}
+            isDisabled={searchButtonDisabled}
           >
             Search
           </Button>
@@ -264,18 +285,22 @@ const Clients = () => {
             Manage Clients
           </Button>
         </Flex>
+      </Flex>
+      <div style={{ display: "flex", justifyContent: "center" }}>OR</div>
+      <Flex mb={7}>
         <div>
           <SearchByReleasedVersion
             onSearch={handleSearchByReleasedVersion}
             onUncheck={onUncheck}
+            onCheck={onCheck}
           />
         </div>
       </Flex>
+
       <Table>
         <Thead backgroundColor="white">
           <Tr>
             <CustomTh>Name</CustomTh>
-            <CustomTh>Components</CustomTh>
             <CustomTh>
               Live <br />
               Deployment Group
@@ -295,56 +320,86 @@ const Clients = () => {
               Deployment
               <br /> Priority
             </CustomTh>
-            <CustomTh>Is Active</CustomTh>
+            <CustomTh>
+              Domain <br />
+              Url
+            </CustomTh>
+            <CustomTh>
+              Is <br />
+              Active
+            </CustomTh>
           </Tr>
         </Thead>
 
         <Tbody>
           {clients.length > 0 ? (
             clients.map((client) => (
-              <Tr key={client.name} _hover={{ bg: "gray.100" }}>
-                <Td minWidth={130}>
-                  <Link
-                    href={
-                      client.domainUrl.startsWith("http://") ||
-                      client.domainUrl.startsWith("https://")
-                        ? client.domainUrl
-                        : `http://${client.domainUrl}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    _hover={{ textDecoration: "underline" }}
-                  >
-                    {client.name}
-                  </Link>
-                </Td>
-                <Td>
-                  {Object.entries(client.componentVersions).map(
-                    ([key, value]) => (
-                      <Flex key={key}>
-                        <Box as="span" minW="100px">
-                          {key}
-                        </Box>
-                        <Box as="span">: {value}</Box>
-                      </Flex>
-                    )
-                  )}
-                </Td>
-                <Td>{client.liveDeploymentGroup}</Td>
-                <Td>
-                  <Tooltip label={client.primaryPocEmail} placement="top">
-                    {client.primaryPocName}
-                  </Tooltip>
-                </Td>
-                <Td>
-                  <Tooltip label={client.secondaryPocEmail} placement="top">
-                    {client.secondaryPocName}
-                  </Tooltip>
-                </Td>
-                <Td>{client.deploymentOnHold ? "Yes" : "No"}</Td>
-                <Td>{client.deploymentPriority}</Td>
-                <Td>{client.isActive ? "Yes" : "No"}</Td>
-              </Tr>
+              <>
+                <Tr key={client.name} _hover={{ bg: "gray.100" }}>
+                  <Td>
+                    <Link
+                      onClick={(event) => handleToggle(event, client.name)}
+                      style={{ cursor: "pointer", color: "#3182ce" }}
+                    >
+                      {client.name}
+                    </Link>
+                  </Td>
+                  <Td>{client.liveDeploymentGroup}</Td>
+                  <Td>
+                    <Tooltip label={client.primaryPocEmail} placement="top">
+                      {client.primaryPocName}
+                    </Tooltip>
+                  </Td>
+                  <Td>
+                    <Tooltip label={client.secondaryPocEmail} placement="top">
+                      {client.secondaryPocName}
+                    </Tooltip>
+                  </Td>
+                  <Td>{client.deploymentOnHold ? "Yes" : "No"}</Td>
+                  <Td>{client.deploymentPriority}</Td>
+                  <Td>
+                    <a
+                      href={client.domainUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      color="#3182ce"
+                    >
+                      <FaExternalLinkAlt color="#3182ce" />
+                    </a>
+                  </Td>
+                  <Td>{client.isActive ? "Yes" : "No"}</Td>
+                </Tr>
+                {show[client.name] && (
+                  <Tr>
+                    <Td colSpan={8}>
+                      <Box
+                        borderWidth="1px"
+                        borderRadius="lg"
+                        overflow="hidden"
+                      >
+                        <Table variant="simple" backgroundColor="white">
+                          <Thead>
+                            <Tr>
+                              <CustomTh>Component</CustomTh>
+                              <CustomTh>Version</CustomTh>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {Object.entries(client.componentVersions).map(
+                              ([key, value]) => (
+                                <Tr key={key} _hover={{ bg: "gray.100" }}>
+                                  <Td>{key}</Td>
+                                  <Td>{value}</Td>
+                                </Tr>
+                              )
+                            )}
+                          </Tbody>
+                        </Table>
+                      </Box>
+                    </Td>
+                  </Tr>
+                )}
+              </>
             ))
           ) : (
             <Tr>

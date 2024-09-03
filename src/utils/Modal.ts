@@ -1,7 +1,8 @@
 export interface Component {
     name: string;
-    pocName?: string;
-    pocEmail?: string;
+    pocName: string;
+    pocEmail: string;
+    releaseJobName: string;
   }
 
 export interface Client {

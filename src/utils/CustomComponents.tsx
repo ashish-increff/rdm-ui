@@ -7,7 +7,14 @@ import {
 } from "@chakra-ui/react";
 
 export const CustomInput: React.FC<InputProps> = (props) => {
-  return <Input backgroundColor="white" autoComplete="off" {...props} />;
+  return (
+    <Input
+      backgroundColor="white"
+      autoComplete="off"
+      boxShadow={"sm"}
+      {...props}
+    />
+  );
 };
 
 export const CustomTh: React.FC<TableColumnHeaderProps> = (props) => {

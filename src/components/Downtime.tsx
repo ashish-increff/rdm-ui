@@ -150,7 +150,7 @@ const Downtime = () => {
   }, []);
 
   return (
-    <Box mt="0" pt="0" padding="4" boxShadow="lg" bg={bgColor}>
+    <Box mt="0" pt="0" padding="4" bg={bgColor}>
       <Tabs
         colorScheme={colorScheme}
         index={tabIndex}

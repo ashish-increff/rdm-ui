@@ -27,6 +27,7 @@ import {
   VStack,
   Heading,
   Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import componentService from "../services/component-service";
 import { saveAs } from "file-saver";
@@ -194,6 +195,7 @@ const Components = () => {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
           backgroundColor="white"
+          boxShadow={"sm"}
         />
         <Button colorScheme="blue" onClick={handleManageClick}>
           Manage Components
@@ -206,10 +208,10 @@ const Components = () => {
               Component Name
             </Th>
             <Th boxShadow="md" fontWeight="bold">
-              POC Name
+              Release Job Name
             </Th>
             <Th boxShadow="md" fontWeight="bold">
-              POC Email
+              POC Name
             </Th>
           </Tr>
         </Thead>
@@ -222,8 +224,12 @@ const Components = () => {
             filteredComponents.map((component, index) => (
               <Tr key={index} _hover={{ bg: "gray.100" }}>
                 <Td>{component.name}</Td>
-                <Td>{component.pocName ? component.pocName : "-"}</Td>
-                <Td>{component.pocEmail ? component.pocEmail : "-"}</Td>
+                <Td>{component.releaseJobName}</Td>
+                <Td>
+                  <Tooltip label={component.pocEmail} placement="top">
+                    {component.pocName}
+                  </Tooltip>
+                </Td>
               </Tr>
             ))
           )}
@@ -250,9 +256,7 @@ const Components = () => {
                     boxShadow="lg"
                   >
                     <VStack spacing={4} align="stretch">
-                      <Heading as="h3" size="sm">
-                        Upload Component(s)
-                      </Heading>
+                      <FormLabel>Upload Component(s)</FormLabel>
                       <FormControl>
                         <Input
                           type="file"
@@ -325,9 +329,7 @@ const Components = () => {
                     boxShadow="lg"
                   >
                     <VStack spacing={4} align="stretch">
-                      <Heading as="h3" size="sm">
-                        Update Component(s)
-                      </Heading>
+                      <FormLabel>Upload Component(s)</FormLabel>
                       <FormControl>
                         <Input
                           type="file"

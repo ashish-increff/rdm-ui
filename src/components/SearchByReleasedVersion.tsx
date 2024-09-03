@@ -24,12 +24,14 @@ interface SearchByReleasedVersionProps {
   checkboxLabel?: string;
   onSearch: (releasedVersions: Record<string, string>) => Promise<void>;
   onUncheck?: () => void; // New prop to handle uncheck logic
+  onCheck?: () => void; // Optional check handler
 }
 
 const SearchByReleasedVersion: React.FC<SearchByReleasedVersionProps> = ({
   checkboxLabel = "Search By Released Version",
   onSearch,
   onUncheck, // Optional uncheck handler
+  onCheck,
 }) => {
   const [components, setComponents] = useState<Component[]>([]);
   const [releaseOptions, setReleaseOptions] = useState<
@@ -150,6 +152,7 @@ const SearchByReleasedVersion: React.FC<SearchByReleasedVersionProps> = ({
     } else {
       // Checkbox is being checked
       handleCheck();
+      if (onCheck) onCheck(); // Call the check handler if provided
     }
     setSearchByVersion(!searchByVersion);
   };

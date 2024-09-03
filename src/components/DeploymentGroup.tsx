@@ -4,18 +4,15 @@ import {
   Button,
   Input,
   Flex,
-  Checkbox,
-  IconButton,
-  VStack,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  Spinner,
   Stack,
   useTheme,
+  Link,
 } from "@chakra-ui/react";
 import { FaEdit } from "react-icons/fa";
 import componentService from "../services/component-service";
@@ -30,6 +27,7 @@ import {
   DeploymentGroup,
 } from "../utils/Modal";
 import SearchByReleasedVersion from "./SearchByReleasedVersion";
+import { CustomInput, CustomTh } from "../utils/CustomComponents";
 
 const DeploymentGroups = () => {
   const theme = useTheme();
@@ -37,15 +35,10 @@ const DeploymentGroups = () => {
   const [releaseOptions, setReleaseOptions] = useState<
     Record<string, OptionType[]>
   >({});
-  const [loadingComponents, setLoadingComponents] = useState<boolean>(true);
-  const [loadingReleases, setLoadingReleases] = useState<
-    Record<string, boolean>
-  >({});
   const [searchValue, setSearchValue] = useState("");
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
   );
-  const [loadingDeployments, setLoadingDeployments] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState(false);
   const [searchByVersion, setSearchByVersion] = useState(false);
   const [componentReleaseGroups, setComponentReleaseGroups] = useState<
@@ -54,6 +47,18 @@ const DeploymentGroups = () => {
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
+  const [show, setShow] = useState<{ [key: string]: boolean }>({});
+
+  const handleToggle = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    name: string
+  ) => {
+    event.preventDefault();
+    setShow((prevState: { [key: string]: boolean }) => ({
+      ...prevState,
+      [name]: !prevState[name],
+    }));
+  };
 
   type OptionType = {
     value: string;
@@ -74,7 +79,6 @@ const DeploymentGroups = () => {
     try {
       const response = await componentService.getAll<Component>().request;
       setComponents(response.data);
-      setLoadingComponents(false);
 
       response.data.forEach((component) => {
         fetchReleases(component.name);
@@ -82,16 +86,10 @@ const DeploymentGroups = () => {
     } catch (error) {
       console.error(error);
       ToastManager.error("Error Loading Components", (error as Error).message);
-      setLoadingComponents(false);
     }
   };
 
   const fetchReleases = async (componentName: string) => {
-    setLoadingReleases((prevState) => ({
-      ...prevState,
-      [componentName]: true,
-    }));
-
     try {
       const response = await releaseService.getByComponentName<Release[]>(
         componentName
@@ -108,11 +106,6 @@ const DeploymentGroups = () => {
       }));
     } catch (error) {
       ToastManager.error("Error Loading Releases", (error as Error).message);
-    } finally {
-      setLoadingReleases((prevState) => ({
-        ...prevState,
-        [componentName]: false,
-      }));
     }
   };
 
@@ -133,7 +126,6 @@ const DeploymentGroups = () => {
       setSearchByVersion(false);
     }
 
-    setLoadingDeployments(true);
     try {
       const response =
         await deploymentGroupService.search<SearchDeploymentGroup>({
@@ -152,8 +144,6 @@ const DeploymentGroups = () => {
         "Error Searching Deployment Groups",
         (error as Error).message
       );
-    } finally {
-      setLoadingDeployments(false);
     }
   };
 
@@ -164,7 +154,6 @@ const DeploymentGroups = () => {
       const response = await deploymentGroupService.search({
         releasedVersions,
       });
-      // handle the response as needed
       ToastManager.success("Success", "Search completed successfully.");
     } catch (error) {
       ToastManager.error("Error during search", (error as Error).message);
@@ -175,11 +164,10 @@ const DeploymentGroups = () => {
     <Box padding="4" boxShadow="lg" borderRadius="md">
       <Stack spacing={4}>
         <Flex>
-          <Input
+          <CustomInput
             placeholder="Deployment Group Name"
             maxW="220px"
             mr={4}
-            backgroundColor="white"
             value={searchValue}
             onChange={handleInputChange}
           />
@@ -195,7 +183,7 @@ const DeploymentGroups = () => {
             Add Group
           </Button>
         </Flex>
-
+        <Flex ml={100}>OR</Flex>
         <SearchByReleasedVersion
           checkboxLabel="Search By Released Version"
           onSearch={handleSearchByReleasedVersion}
@@ -206,36 +194,24 @@ const DeploymentGroups = () => {
         <Thead backgroundColor="white">
           <Tr>
             <Th boxShadow="md">Name</Th>
-            <Th boxShadow="md">Released Versions</Th>
             <Th boxShadow="md">Description</Th>
             <Th boxShadow="md">Remarks</Th>
             <Th boxShadow="md">Action</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {loadingDeployments ? (
-            // You can show a loading message or leave this block empty to just show an empty table until data loads
-            <Tr>
-              <Td colSpan={5} textAlign="center">
-                Loading...
-              </Td>
-            </Tr>
-          ) : (
-            deploymentGroups.map((group) => (
+          {deploymentGroups.map((group) => (
+            <>
               <Tr key={group.name} _hover={{ bg: "gray.100" }}>
-                <Td>{group.name}</Td>
                 <Td>
-                  {Object.entries(group.releasedVersions).map(
-                    ([key, value]) => (
-                      <Flex key={key}>
-                        <Box as="span" minW="100px">
-                          {key}
-                        </Box>
-                        <Box as="span">: {value}</Box>
-                      </Flex>
-                    )
-                  )}
+                  <Link
+                    onClick={(event) => handleToggle(event, group.name)}
+                    style={{ cursor: "pointer", color: "#3182ce" }}
+                  >
+                    {group.name}
+                  </Link>
                 </Td>
+
                 <Td>{group.description ? group.description : "-"}</Td>
                 <Td>{group.remarks ? group.remarks : "-"}</Td>
                 <Td>
@@ -246,8 +222,34 @@ const DeploymentGroups = () => {
                   ></Button>
                 </Td>
               </Tr>
-            ))
-          )}
+              {show[group.name] && (
+                <Tr>
+                  <Td colSpan={8}>
+                    <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
+                      <Table variant="simple" backgroundColor="white">
+                        <Thead>
+                          <Tr>
+                            <CustomTh>Component</CustomTh>
+                            <CustomTh>Version</CustomTh>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {Object.entries(group.releasedVersions).map(
+                            ([key, value]) => (
+                              <Tr key={key} _hover={{ bg: "gray.100" }}>
+                                <Td>{key}</Td>
+                                <Td>{value}</Td>
+                              </Tr>
+                            )
+                          )}
+                        </Tbody>
+                      </Table>
+                    </Box>
+                  </Td>
+                </Tr>
+              )}
+            </>
+          ))}
         </Tbody>
       </Table>
 

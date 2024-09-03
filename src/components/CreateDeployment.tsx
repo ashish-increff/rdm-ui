@@ -145,9 +145,6 @@ const CreateDeployment = () => {
                 <FormLabel fontWeight="bold">Clients</FormLabel>
               </Box>
               <Box flex="1.5" textAlign="center" minWidth="400px" pl="235px">
-                <FormLabel fontWeight="bold">Script Required</FormLabel>
-              </Box>
-              <Box flex="1" textAlign="center" minWidth="150px">
                 <FormLabel fontWeight="bold">Is Urgent</FormLabel>
               </Box>
             </HStack>
@@ -177,30 +174,7 @@ const CreateDeployment = () => {
                     }}
                   />
                 </Box>
-                <Box flex="1">
-                  <Select
-                    options={[
-                      { value: "True", label: "True" },
-                      { value: "False", label: "False" },
-                    ]}
-                    value={{
-                      value: data.scriptRequired,
-                      label: data.scriptRequired,
-                    }}
-                    onChange={(option) =>
-                      handleClientDataChange(
-                        index,
-                        "scriptRequired",
-                        option?.value
-                      )
-                    }
-                    defaultValue={{ value: "True", label: "True" }}
-                    styles={{
-                      container: (base) => ({ ...base, width: "100%" }),
-                      control: (base) => ({ ...base, minWidth: "150px" }),
-                    }}
-                  />
-                </Box>
+
                 <Box flex="1">
                   <Select
                     options={[
@@ -244,8 +218,9 @@ const CreateDeployment = () => {
                 colorScheme="blue"
                 onClick={handleCreateDeployments}
                 ml={4}
+                isDisabled={isAddClientButtonDisabled()}
               >
-                Create Deployment
+                Create Deployments
               </Button>
             </HStack>
           </VStack>
@@ -258,7 +233,6 @@ const CreateDeployment = () => {
               flex="1"
               colorScheme="blue"
               onClick={handleCreateDeployments}
-              isDisabled={isAddClientButtonDisabled()}
             >
               Create Deployments
             </Button>
