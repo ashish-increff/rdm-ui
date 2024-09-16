@@ -56,7 +56,6 @@ const Clients = () => {
   const [deploymentOnHold, setDeploymentOnHold] = useState<boolean | null>(
     null
   );
-  const [deploymentPriority, setDeploymentPriority] = useState<number | "">("");
   const [isActive, setIsActive] = useState<boolean | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
@@ -98,8 +97,6 @@ const Clients = () => {
         name: name || null, // Send null if name is an empty string
         liveDeploymentGroup: liveDeploymentGroup || null, // Send null if liveDeploymentGroup is an empty string
         deploymentOnHold: deploymentOnHold, // Already a boolean
-        deploymentPriority:
-          deploymentPriority === "" ? null : deploymentPriority, // Send null if deploymentPriority is an empty string
         isActive: isActive, // Already a boolean
       });
       setClients(response.data as Client[]);
@@ -152,11 +149,6 @@ const Clients = () => {
     { value: false, label: "No" },
   ];
 
-  const priorityOptions = [1, 2, 3, 4, 5].map((priority) => ({
-    value: priority,
-    label: priority,
-  }));
-
   const handleSelectChange =
     (setter: React.Dispatch<React.SetStateAction<boolean | null>>) =>
     (selectedOption: any) => {
@@ -184,7 +176,6 @@ const Clients = () => {
     setName("");
     setLiveDeploymentGroup("");
     setDeploymentOnHold(null);
-    setDeploymentPriority("");
     setIsActive(null);
     setResetKey((prevKey) => prevKey + 1); // Update the key to force re-render
   };
@@ -243,21 +234,7 @@ const Clients = () => {
               isClearable
             />
           </FormControl>
-          <FormControl id="deploymentPriority" w="190px">
-            <FormLabel fontWeight="bold">Deployment Priority</FormLabel>
-            <Select
-              key={`deploymentPriority-${resetKey}`}
-              placeholder="Select"
-              options={priorityOptions}
-              onChange={(option) =>
-                setDeploymentPriority(option ? option.value : "")
-              }
-              value={priorityOptions.find(
-                (option) => option.value === deploymentPriority
-              )}
-              isClearable
-            />
-          </FormControl>
+
           <FormControl id="isActive" w="190px">
             <FormLabel fontWeight="bold">Is Active</FormLabel>
             <Select
@@ -316,10 +293,7 @@ const Clients = () => {
             <CustomTh>
               Deployment <br /> On Hold
             </CustomTh>
-            <CustomTh>
-              Deployment
-              <br /> Priority
-            </CustomTh>
+
             <CustomTh>
               Domain <br />
               Url
@@ -356,7 +330,6 @@ const Clients = () => {
                     </Tooltip>
                   </Td>
                   <Td>{client.deploymentOnHold ? "Yes" : "No"}</Td>
-                  <Td>{client.deploymentPriority}</Td>
                   <Td>
                     <a
                       href={client.domainUrl}
@@ -493,7 +466,6 @@ const Clients = () => {
                               "liveDeploymentGroup",
                               "domainUrl",
                               "deploymentOnHold",
-                              "deploymentPriority",
                               "primaryPocEmail",
                               "secondaryPocEmail",
                               "isActive",
@@ -580,7 +552,6 @@ const Clients = () => {
                             optionalHeaders: [
                               "domainUrl",
                               "deploymentOnHold",
-                              "deploymentPriority",
                               "primaryPocEmail",
                               "secondaryPocEmail",
                               "isActive",

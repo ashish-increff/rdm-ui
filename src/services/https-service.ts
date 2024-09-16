@@ -23,6 +23,17 @@ class HttpService {
     return apiClient.delete(this.endpoint + "/" + id);
   }
 
+  updateComponent(id: number, releaseJobName: string, pocEmail: String) {
+     var url = this.endpoint + "/" + id;
+     if(releaseJobName!==null){
+      url += "?releaseJobName=" + releaseJobName;
+     }
+      if(pocEmail!==null){
+        url += "&pocEmail=" + pocEmail;
+      }
+    return apiClient.put(url);
+  }
+
   create<T>(entity: T) {
     return apiClient.post(this.endpoint, entity);
   }
