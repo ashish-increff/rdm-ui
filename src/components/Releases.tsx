@@ -42,6 +42,16 @@ const Releases = () => {
   const [filteredReleases, setFilteredReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Validation function to check if required fields are filled
+  const isFormValid = () => {
+    return (
+      newRelease.componentId > 0 &&
+      newRelease.name.trim() !== "" &&
+      newRelease.releaseType !== "" &&
+      newRelease.componentVersion.trim() !== ""
+    );
+  };
+
   // Modal states
   const [isModalOpen, setModalOpen] = useState(false);
   const [newRelease, setNewRelease] = useState({
@@ -342,7 +352,11 @@ const Releases = () => {
             >
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleSubmit}>
+            <Button
+              colorScheme="blue"
+              onClick={handleSubmit}
+              isDisabled={!isFormValid()}
+            >
               Submit
             </Button>
           </ModalFooter>
