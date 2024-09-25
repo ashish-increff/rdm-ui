@@ -3,8 +3,6 @@ export interface Component {
     name: string;
     pocName: string;
     pocEmail: string;
-    releaseJobName: string;
-    isPrimary: boolean;
   }
 
 export interface Client {

@@ -40,17 +40,13 @@ const Components = () => {
   );
   const [formData, setFormData] = useState({
     name: "",
-    releaseJobName: "",
     pocEmail: "",
-    isPrimary: "",
     id: 0,
   });
 
   const [addComponentForm, setAddComponentForm] = useState({
     name: "",
-    releaseJobName: "",
     pocEmail: "",
-    isPrimary: "",
   });
 
   useEffect(() => {
@@ -79,17 +75,13 @@ const Components = () => {
       setSelectedComponent(component);
       setFormData({
         name: component.name,
-        releaseJobName: component.releaseJobName,
         pocEmail: component.pocEmail || "",
-        isPrimary: component.isPrimary ? "primary" : "dependency",
         id: component.id,
       });
     } else {
       setFormData({
         name: "",
-        releaseJobName: "",
         pocEmail: "",
-        isPrimary: "",
         id: 0,
       });
       setSelectedComponent(null);
@@ -103,18 +95,10 @@ const Components = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRadioChange = (value: string) => {
-    setFormData({ ...formData, isPrimary: value });
-  };
-
   const handleSubmit = async () => {
     try {
       if (modalMode === "edit" && selectedComponent) {
-        await componentService.updateComponent(
-          formData.id,
-          formData.releaseJobName,
-          formData.pocEmail
-        );
+        await componentService.updateComponent(formData.id, formData.pocEmail);
         ToastManager.success(
           "Component Updated",
           "Successfully updated the component."
@@ -122,9 +106,7 @@ const Components = () => {
       } else {
         setAddComponentForm({
           name: formData.name,
-          releaseJobName: formData.releaseJobName,
           pocEmail: formData.pocEmail,
-          isPrimary: formData.isPrimary,
         });
         await componentService.create(formData);
         ToastManager.success(
@@ -143,14 +125,9 @@ const Components = () => {
   // Function to check if form data is valid
   const isFormValid = () => {
     if (modalMode === "add") {
-      return (
-        formData.name &&
-        formData.releaseJobName &&
-        formData.pocEmail &&
-        formData.isPrimary
-      );
+      return formData.name && formData.pocEmail;
     } else if (modalMode === "edit") {
-      return formData.releaseJobName && formData.pocEmail;
+      return formData.pocEmail;
     }
     return false;
   };
@@ -181,14 +158,9 @@ const Components = () => {
               Component Name
             </Th>
             <Th boxShadow="md" fontWeight="bold">
-              Release Job Name
-            </Th>
-            <Th boxShadow="md" fontWeight="bold">
               POC Name
             </Th>
-            <Th boxShadow="md" fontWeight="bold">
-              Type
-            </Th>
+
             <Th boxShadow="md" fontWeight="bold">
               Actions
             </Th>
@@ -203,13 +175,11 @@ const Components = () => {
             filteredComponents.map((component, index) => (
               <Tr key={index} _hover={{ bg: "gray.100" }}>
                 <Td>{component.name}</Td>
-                <Td>{component.releaseJobName}</Td>
                 <Td>
                   <Tooltip label={component.pocEmail} placement="top">
                     {component.pocName}
                   </Tooltip>
                 </Td>
-                <Td>{component.isPrimary ? "Primary" : "Dependency"}</Td>
                 <Td>
                   <Button
                     colorScheme="teal"
@@ -252,17 +222,7 @@ const Components = () => {
                   autoComplete="off"
                 />
               </FormControl>
-              <FormControl>
-                <FormLabel>
-                  Release Job Name <span style={{ color: "red" }}>*</span>
-                </FormLabel>
-                <Input
-                  name="releaseJobName"
-                  value={formData.releaseJobName}
-                  onChange={handleFormChange}
-                  autoComplete="off"
-                />
-              </FormControl>
+
               <FormControl>
                 <FormLabel>
                   POC Email <span style={{ color: "red" }}>*</span>
@@ -274,25 +234,6 @@ const Components = () => {
                   onChange={handleFormChange}
                   autoComplete="off"
                 />
-              </FormControl>
-              <FormControl>
-                <FormLabel>
-                  Type{" "}
-                  {modalMode === "add" && (
-                    <span style={{ color: "red" }}>*</span>
-                  )}
-                </FormLabel>
-                <RadioGroup
-                  name="isPrimary"
-                  onChange={handleRadioChange}
-                  value={formData.isPrimary}
-                  isDisabled={modalMode === "edit"}
-                >
-                  <Stack direction="row">
-                    <Radio value="primary">Primary</Radio>
-                    <Radio value="dependency">Dependency</Radio>
-                  </Stack>
-                </RadioGroup>
               </FormControl>
             </VStack>
           </ModalBody>

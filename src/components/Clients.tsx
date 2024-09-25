@@ -385,6 +385,7 @@ const Clients = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         closeOnOverlayClick={false}
+        size="lg"
       >
         <ModalOverlay />
         <ModalContent>
@@ -393,6 +394,7 @@ const Clients = () => {
               <TabList>
                 <Tab>Add Clients</Tab>
                 <Tab>Update Clients</Tab>
+                <Tab>Add Components</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel>
@@ -493,6 +495,91 @@ const Clients = () => {
                   >
                     <FormControl>
                       <FormLabel>Upload Client(s)</FormLabel>
+                      <Input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileChange}
+                      />
+                      <Flex
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        mt={2}
+                      >
+                        <Link
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDownloadTemplate(
+                              updateClientsCsvData,
+                              updateClientsCsvName
+                            );
+                          }}
+                          color="teal.500"
+                          marginRight="2"
+                        >
+                          Download Template
+                        </Link>
+                        <InfoPopover
+                          fields={bulkUpdateClientsFields}
+                          color="teal.500"
+                        />
+                      </Flex>
+                      {fileErrors.length > 0 && (
+                        <Box mt={4} color="red.500">
+                          <Text fontWeight="bold">
+                            Note: After fixing problems, please re-attach the
+                            file again
+                          </Text>
+                          <Box mt={2}>
+                            {fileErrors.map((error, index) => (
+                              <Text key={index}>{error}</Text>
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
+                    </FormControl>
+                    <HStack justifyContent="flex-end" mt={4}>
+                      <Button onClick={handleCloseModal}>Cancel</Button>
+                      <Button
+                        ml={4}
+                        isDisabled={uploadDisabled}
+                        onClick={() =>
+                          HandleFileUpload({
+                            selectedFile,
+                            setFileErrors,
+                            handleCancel,
+                            ToastManager,
+                            createService: componentService.bulkCreate,
+                            updateService: componentService.bulkUpdate,
+                            requiredHeaders: ["name"],
+                            optionalHeaders: [
+                              "domainUrl",
+                              "deploymentOnHold",
+                              "primaryPocEmail",
+                              "secondaryPocEmail",
+                              "isActive",
+                            ],
+                            onSuccess: handleSearchWithoutParam, // Provide success callback
+                            tab: "update", // Include the current tab value
+                          })
+                        }
+                        colorScheme="blue"
+                      >
+                        Upload
+                      </Button>
+                    </HStack>
+                  </Box>
+                </TabPanel>
+                <TabPanel>
+                  <Box
+                    maxW="md"
+                    mx="auto"
+                    p={6}
+                    borderWidth={1}
+                    borderRadius="lg"
+                    boxShadow="lg"
+                  >
+                    <FormControl>
+                      <FormLabel>Upload Component(s)</FormLabel>
                       <Input
                         type="file"
                         accept=".csv"
