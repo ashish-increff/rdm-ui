@@ -12,8 +12,19 @@ import {
   Td,
   Spinner,
   useTheme,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Textarea,
+  Input,
+  Text,
 } from "@chakra-ui/react";
-import Select from "react-select";
+import Select, { SingleValue } from "react-select";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
@@ -30,6 +41,16 @@ const Releases = () => {
   const [releases, setReleases] = useState<Release[]>([]);
   const [filteredReleases, setFilteredReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Modal states
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [newRelease, setNewRelease] = useState({
+    componentId: 0,
+    name: "",
+    description: "",
+    releaseType: "SPRINT",
+    componentVersion: "",
+  });
 
   // Fetch components
   const fetchComponents = async () => {
@@ -69,6 +90,17 @@ const Releases = () => {
     }
   };
 
+  // Handle new release submission
+  const handleSubmit = async () => {
+    try {
+      const response = await releaseService.create(newRelease);
+      ToastManager.success("Success", "Release created successfully!");
+      setModalOpen(false);
+    } catch (error) {
+      ToastManager.error("Error creating release", (error as Error).message);
+    }
+  };
+
   useEffect(() => {
     fetchComponents();
   }, []);
@@ -86,6 +118,9 @@ const Releases = () => {
 
   return (
     <Box p={4} bg={useTheme().colors.background} color={useTheme().colors.text}>
+      <Button onClick={() => setModalOpen(true)} colorScheme="teal" mb={5}>
+        Add Release
+      </Button>
       <HStack align="start" spacing={4}>
         <FormControl width="200px">
           <FormLabel>Component</FormLabel>
@@ -99,9 +134,9 @@ const Releases = () => {
                   }
                 : null
             }
-            onChange={(option) =>
-              setSelectedComponent(option ? option.value : null)
-            }
+            onChange={(
+              option: SingleValue<{ label: string | undefined; value: number }>
+            ) => setSelectedComponent(option ? option.value : null)}
             options={components.map((c) => ({ label: c.name, value: c.id }))}
           />
         </FormControl>
@@ -113,7 +148,7 @@ const Releases = () => {
                 ? { label: selectedReleaseType, value: selectedReleaseType }
                 : null
             }
-            onChange={(option) =>
+            onChange={(option: SingleValue<{ label: string; value: string }>) =>
               setSelectedReleaseType(option ? option.value : null)
             }
             options={[
@@ -170,6 +205,149 @@ const Releases = () => {
           </Table>
         )}
       </Box>
+
+      {/* Modal for adding a new release */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        closeOnOverlayClick={false}
+        size="xl"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Add Release</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Box
+              maxW="lg"
+              mx="auto"
+              p={6}
+              borderWidth={1}
+              borderRadius="lg"
+              boxShadow="lg"
+            >
+              <FormControl mb={4}>
+                <FormLabel>
+                  Component{" "}
+                  <Text color="red.500" as="span">
+                    *
+                  </Text>
+                </FormLabel>
+
+                <Select
+                  value={
+                    newRelease.componentId
+                      ? {
+                          label: components.find(
+                            (c) => c.id === newRelease.componentId
+                          )?.name,
+                          value: newRelease.componentId,
+                        }
+                      : null
+                  }
+                  onChange={(
+                    option: SingleValue<{
+                      label: string | undefined;
+                      value: number;
+                    }>
+                  ) =>
+                    setNewRelease({
+                      ...newRelease,
+                      componentId: option ? option.value : 0,
+                    })
+                  }
+                  options={components.map((c) => ({
+                    label: c.name,
+                    value: c.id,
+                  }))}
+                />
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>
+                  Name{" "}
+                  <Text color="red.500" as="span">
+                    *
+                  </Text>
+                </FormLabel>
+                <Input
+                  value={newRelease.name}
+                  onChange={(e) =>
+                    setNewRelease({ ...newRelease, name: e.target.value })
+                  }
+                />
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>Description</FormLabel>
+                <Textarea
+                  value={newRelease.description}
+                  onChange={(e) =>
+                    setNewRelease({
+                      ...newRelease,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>
+                  Release Type{" "}
+                  <Text color="red.500" as="span">
+                    *
+                  </Text>
+                </FormLabel>
+                <Select
+                  value={{
+                    label: newRelease.releaseType,
+                    value: newRelease.releaseType,
+                  }}
+                  onChange={(
+                    option: SingleValue<{ label: string; value: string }>
+                  ) =>
+                    setNewRelease({
+                      ...newRelease,
+                      releaseType: option ? option.value : "",
+                    })
+                  }
+                  options={[
+                    { label: "SPRINT", value: "SPRINT" },
+                    { label: "FEATURE", value: "FEATURE" },
+                    { label: "BUG_FIX", value: "BUG_FIX" },
+                  ]}
+                />
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>
+                  Component Version{" "}
+                  <Text color="red.500" as="span">
+                    *
+                  </Text>
+                </FormLabel>
+                <Input
+                  value={newRelease.componentVersion}
+                  onChange={(e) =>
+                    setNewRelease({
+                      ...newRelease,
+                      componentVersion: e.target.value,
+                    })
+                  }
+                />
+              </FormControl>
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="gray"
+              onClick={() => setModalOpen(false)}
+              mr={3}
+            >
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={handleSubmit}>
+              Submit
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
