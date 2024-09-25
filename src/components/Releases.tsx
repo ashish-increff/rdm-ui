@@ -11,20 +11,17 @@ import {
   Th,
   Td,
   Spinner,
-  useColorModeValue,
   useTheme,
-  useColorMode,
 } from "@chakra-ui/react";
 import Select from "react-select";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
-import { getTableStyles } from "./Styles";
 import { Component, Release } from "../utils/Modal";
 
 const Releases = () => {
   const [components, setComponents] = useState<Component[]>([]);
-  const [selectedComponent, setSelectedComponent] = useState<string | null>(
+  const [selectedComponent, setSelectedComponent] = useState<number | null>(
     null
   );
   const [selectedReleaseType, setSelectedReleaseType] = useState<string | null>(
@@ -34,27 +31,25 @@ const Releases = () => {
   const [filteredReleases, setFilteredReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const colorScheme = useColorModeValue("blue", "teal");
-  const { colorMode } = useColorMode();
-  const tableStyles = getTableStyles(colorMode);
-
+  // Fetch components
   const fetchComponents = async () => {
     try {
       const { request } = componentService.getAll<Component>();
       const response = await request;
-      setComponents(response.data); // Assuming response.data contains the array of components
+      setComponents(response.data);
     } catch (error) {
       ToastManager.error("Error Loading Components", (error as Error).message);
     }
   };
 
-  const fetchReleases = async (componentName: string) => {
+  // Fetch releases based on selected component
+  const fetchReleases = async (componentId: number) => {
     setLoading(true);
     try {
-      const response = await releaseService.getByComponentName<Release[]>(
-        componentName
+      const response = await releaseService.getByComponentId<Release[]>(
+        componentId
       );
-      setReleases(response.data); // Assuming response.data contains the array of releases
+      setReleases(response.data);
       setFilteredReleases(response.data);
     } catch (error) {
       ToastManager.error("Error Loading Releases", (error as Error).message);
@@ -63,6 +58,7 @@ const Releases = () => {
     }
   };
 
+  // Filter releases based on type
   const filterReleases = (type: string | null) => {
     if (type === null) {
       setFilteredReleases(releases);
@@ -96,21 +92,21 @@ const Releases = () => {
           <Select
             value={
               selectedComponent
-                ? { label: selectedComponent, value: selectedComponent }
+                ? {
+                    label: components.find((c) => c.id === selectedComponent)
+                      ?.name,
+                    value: selectedComponent,
+                  }
                 : null
             }
             onChange={(option) =>
               setSelectedComponent(option ? option.value : null)
             }
-            options={components.map((c) => ({
-              label: c.name,
-              value: c.name,
-            }))}
+            options={components.map((c) => ({ label: c.name, value: c.id }))}
           />
         </FormControl>
         <FormControl width="200px" isDisabled={!selectedComponent}>
           <FormLabel>Release Type</FormLabel>
-
           <Select
             value={
               selectedReleaseType
@@ -158,7 +154,7 @@ const Releases = () => {
                         wordWrap: "break-word",
                       }}
                     >
-                      {release.description ? release.description : "-"}
+                      {release.description || "-"}
                     </Td>
                     <Td color={release.containsBug ? "red.500" : "inherit"}>
                       {release.containsBug ? "Yes" : "No"}

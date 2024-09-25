@@ -60,12 +60,20 @@ class HttpService {
   }
   
   getByComponentName<T>(componentName: string) {
-    return apiClient.get<T>(this.endpoint, {
-      params: {
-        componentName: componentName
-      }
-    });
+    var url = this.endpoint + "/component?componentName=" + componentName;
+     
+     
+    return apiClient.get(url);
   }
+
+  getByComponentId<T>(componentId: number) {
+    var url = this.endpoint + "/component/" + componentId;
+     
+     
+    return apiClient.get(url);
+  }
+
+
 }
 
 
