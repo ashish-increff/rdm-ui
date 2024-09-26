@@ -20,6 +20,7 @@ export interface Client {
   }
 
 export interface Release {
+    id: number;
     name: string;
     releaseType: string;
     componentVersion: string;

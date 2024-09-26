@@ -24,7 +24,10 @@ import {
   Input,
   Text,
 } from "@chakra-ui/react";
+
 import Select, { SingleValue } from "react-select";
+import { Tooltip } from "@chakra-ui/react";
+import { FaBug } from "react-icons/fa";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
@@ -35,12 +38,12 @@ const Releases = () => {
   const [selectedComponent, setSelectedComponent] = useState<number | null>(
     null
   );
-  const [selectedReleaseType, setSelectedReleaseType] = useState<string | null>(
-    null
-  );
   const [releases, setReleases] = useState<Release[]>([]);
   const [filteredReleases, setFilteredReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedReleaseType, setSelectedReleaseType] = useState<string>("ALL");
+  const [isBugModalOpen, setBugModalOpen] = useState(false);
+  const [selectedRelease, setSelectedRelease] = useState<Release | null>(null);
 
   // Validation function to check if required fields are filled
   const isFormValid = () => {
@@ -91,7 +94,7 @@ const Releases = () => {
 
   // Filter releases based on type
   const filterReleases = (type: string | null) => {
-    if (type === null) {
+    if (type === null || type === "ALL") {
       setFilteredReleases(releases);
     } else {
       setFilteredReleases(
@@ -118,7 +121,7 @@ const Releases = () => {
   useEffect(() => {
     if (selectedComponent) {
       fetchReleases(selectedComponent);
-      setSelectedReleaseType(null); // Reset release type when component changes
+      setSelectedReleaseType("ALL"); // Reset release type when component changes
     }
   }, [selectedComponent]);
 
@@ -153,15 +156,19 @@ const Releases = () => {
         <FormControl width="200px" isDisabled={!selectedComponent}>
           <FormLabel>Release Type</FormLabel>
           <Select
-            value={
-              selectedReleaseType
-                ? { label: selectedReleaseType, value: selectedReleaseType }
-                : null
-            }
-            onChange={(option: SingleValue<{ label: string; value: string }>) =>
-              setSelectedReleaseType(option ? option.value : null)
-            }
+            value={{
+              label:
+                selectedReleaseType === "ALL" ? "All" : selectedReleaseType,
+              value: selectedReleaseType,
+            }}
+            onChange={(
+              option: SingleValue<{ label: string; value: string }>
+            ) => {
+              const selectedValue = option ? option.value : "ALL"; // Default to "ALL" if option is null
+              setSelectedReleaseType(selectedValue);
+            }}
             options={[
+              { label: "All", value: "ALL" },
               { label: "SPRINT", value: "SPRINT" },
               { label: "FEATURE", value: "FEATURE" },
               { label: "BUG_FIX", value: "BUG_FIX" },
@@ -183,6 +190,7 @@ const Releases = () => {
                 <Th boxShadow="md">Release Type</Th>
                 <Th boxShadow="md">Description</Th>
                 <Th boxShadow="md">Contains Bug</Th>
+                <Th boxShadow="md">Action</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -203,6 +211,19 @@ const Releases = () => {
                     </Td>
                     <Td color={release.containsBug ? "red.500" : "inherit"}>
                       {release.containsBug ? "Yes" : "No"}
+                    </Td>
+                    <Td>
+                      {!release.containsBug && (
+                        <FaBug
+                          color="red"
+                          style={{ cursor: "pointer" }}
+                          title="Mark Release as bug"
+                          onClick={() => {
+                            setSelectedRelease(release);
+                            setBugModalOpen(true);
+                          }}
+                        />
+                      )}
                     </Td>
                   </Tr>
                 ))
@@ -284,6 +305,7 @@ const Releases = () => {
                   onChange={(e) =>
                     setNewRelease({ ...newRelease, name: e.target.value })
                   }
+                  autoComplete="off"
                 />
               </FormControl>
               <FormControl mb={4}>
@@ -296,6 +318,7 @@ const Releases = () => {
                       description: e.target.value,
                     })
                   }
+                  autoComplete="off"
                 />
               </FormControl>
               <FormControl mb={4}>
@@ -340,6 +363,7 @@ const Releases = () => {
                       componentVersion: e.target.value,
                     })
                   }
+                  autoComplete="off"
                 />
               </FormControl>
             </Box>
@@ -358,6 +382,58 @@ const Releases = () => {
               isDisabled={!isFormValid()}
             >
               Submit
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isBugModalOpen}
+        onClose={() => setBugModalOpen(false)}
+        closeOnOverlayClick={false}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm Action</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>Are you sure you want to mark this release as a bug?</Text>
+            <Text>
+              Name: <b>{selectedRelease?.name}</b>, Version:{" "}
+              <b>{selectedRelease?.componentVersion}</b>
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="gray"
+              onClick={() => setBugModalOpen(false)}
+              mr={3}
+            >
+              Cancel
+            </Button>
+            <Button
+              colorScheme="red"
+              onClick={async () => {
+                if (selectedRelease) {
+                  try {
+                    await releaseService.markAsBug(selectedRelease.id);
+                    ToastManager.success("Success", "Release marked as bug!");
+                    // Refresh or update the releases if necessary
+                    if (selectedComponent) {
+                      fetchReleases(selectedComponent);
+                    }
+                  } catch (error) {
+                    ToastManager.error(
+                      "Error marking release as bug",
+                      (error as Error).message
+                    );
+                  } finally {
+                    setBugModalOpen(false);
+                  }
+                }
+              }}
+            >
+              Yes, Mark as Bug
             </Button>
           </ModalFooter>
         </ModalContent>

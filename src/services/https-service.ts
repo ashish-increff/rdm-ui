@@ -73,6 +73,10 @@ class HttpService {
     return apiClient.get(url);
   }
 
+  markAsBug<T>(releaseId:number) {
+    var url = this.endpoint + "/" + releaseId + "/bug";
+    return apiClient.put(url);
+  }
 
 }
 
