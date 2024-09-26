@@ -58,6 +58,10 @@ const Home: React.FC = () => {
               label: "Scripts",
               icon: <FaFileCode color="green" />,
             },
+            {
+              label: "Dependency",
+              icon: <FaFileCode color="green" />,
+            },
           ]}
           color="green.500"
         />
@@ -114,6 +118,9 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     }
     if (label === "Scripts") {
       navigate("/scripts");
+    }
+    if (label === "Dependency") {
+      navigate("/dependency");
     }
     if (label === "Downtime") {
       navigate("/downtime");

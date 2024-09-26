@@ -4,6 +4,10 @@ export interface Component {
     pocName: string;
     pocEmail: string;
   }
+ export interface ComponentVersion {
+    name: string;
+    version: string;
+  } 
 
 export interface Client {
     name: string;
@@ -16,7 +20,7 @@ export interface Client {
     secondaryPocName: string;
     secondaryPocEmail: string;
     isActive: boolean;
-    componentVersions: Record<string, string>;
+    componentVersions:ComponentVersion[];
   }
 
 export interface Release {

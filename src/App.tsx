@@ -12,6 +12,7 @@ import Deployment from "./components/Deployment";
 import Scripts from "./components/Scripts";
 import CreateDeployment from "./components/CreateDeployment";
 import Downtime from "./components/Downtime";
+import Dependency from "./components/Dependency";
 
 const App: React.FC = () => {
   return (
@@ -33,6 +34,7 @@ const App: React.FC = () => {
           <Route path="/scripts" element={<Scripts />} />
           <Route path="/create-deployment" element={<CreateDeployment />} />
           <Route path="/downtime" element={<Downtime />} />
+          <Route path="/dependency" element={<Dependency />} />
         </Routes>
       </Box>
     </>

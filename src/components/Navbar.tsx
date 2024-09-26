@@ -105,6 +105,9 @@ const Navbar = () => {
               <LinkWrapper to="/scripts" onClose={onClose} color="green.500">
                 Scripts
               </LinkWrapper>
+              <LinkWrapper to="/dependency" onClose={onClose} color="green.500">
+                Dependency
+              </LinkWrapper>
               <LinkWrapper
                 to="/create-deployment"
                 onClose={onClose}

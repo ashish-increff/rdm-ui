@@ -59,12 +59,12 @@ class HttpService {
     return apiClient.put(this.endpoint, entities);
   }
   
-  getByComponentName<T>(componentName: string) {
-    var url = this.endpoint + "/component?componentName=" + componentName;
+  // getByComponentName<T>(componentName: string) {
+  //   var url = this.endpoint + "/component?componentName=" + componentName;
      
      
-    return apiClient.get(url);
-  }
+  //   return apiClient.get(url);
+  // }
 
   getByComponentId<T>(componentId: number) {
     var url = this.endpoint + "/component/" + componentId;

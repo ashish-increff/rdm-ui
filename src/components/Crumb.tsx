@@ -28,6 +28,7 @@ const Crumb = () => {
     "create-deployment": "Create Deployments",
     downtime: "Components",
     scripts: "Scripts",
+    dependency: "Dependency",
     // Add more mappings as needed
   };
 

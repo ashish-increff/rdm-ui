@@ -52,7 +52,7 @@ const SearchByReleasedVersion: React.FC<SearchByReleasedVersionProps> = ({
       setComponents(response.data);
 
       response.data.forEach((component) => {
-        fetchReleases(component.name);
+        fetchReleases(component.id, component.name);
       });
     } catch (error) {
       console.error(error);
@@ -60,16 +60,18 @@ const SearchByReleasedVersion: React.FC<SearchByReleasedVersionProps> = ({
     }
   };
 
-  const fetchReleases = async (componentName: string) => {
+  const fetchReleases = async (componentId: number, componentName: string) => {
     try {
-      const response = await releaseService.getByComponentName<Release[]>(
-        componentName
+      const response = await releaseService.getByComponentId<Release[]>(
+        componentId
       );
       const releases = response.data;
-      const options = releases.map((release) => ({
-        value: release.componentVersion + ": " + release.name,
-        label: release.componentVersion + ": " + release.name,
-      }));
+      const options = releases.map(
+        (release: { componentVersion: string; name: string }) => ({
+          value: release.componentVersion + ": " + release.name,
+          label: release.componentVersion + ": " + release.name,
+        })
+      );
 
       setReleaseOptions((prevOptions) => ({
         ...prevOptions,
