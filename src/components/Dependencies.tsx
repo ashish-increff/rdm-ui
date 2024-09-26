@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -11,7 +11,6 @@ import {
   Tr,
   Th,
   Td,
-  useTheme,
   Flex,
   Modal,
   ModalOverlay,
@@ -21,7 +20,12 @@ import {
   ModalBody,
   ModalFooter,
   Input,
+  HStack,
+  IconButton,
+  Text,
+  Spacer,
 } from "@chakra-ui/react";
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import Select, { SingleValue } from "react-select";
 import dependencyService from "../services/dependency-service";
 import deploymentGroupService from "../services/deployment-group-service";
@@ -38,7 +42,8 @@ const Dependencies = () => {
   const [searchDependencyType, setSearchDependencyType] = useState<
     string | null
   >(null);
-
+  const [dependencies, setDependencies] = useState<Dependency[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSourceGroup, setModalSourceGroup] = useState<string | null>(null);
   const [modalDestinationGroup, setModalDestinationGroup] = useState<
     string | null
@@ -47,17 +52,14 @@ const Dependencies = () => {
     null
   );
   const [modalLink, setModalLink] = useState<string>("");
-
-  const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
-    []
-  );
-  const [dependencies, setDependencies] = useState<Dependency[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [types, setTypes] = useState([{ type: "", link: "" }]);
 
   const dependencyTypes = [
-    { value: "TYPE_A", label: "TYPE_A" },
-    { value: "TYPE_B", label: "TYPE_B" },
-    // Add more types as needed
+    { value: "PRE_MIGRATION", label: "PRE_MIGRATION" },
+    { value: "MIGRATION", label: "MIGRATION" },
+    { value: "POST_MIGRATION", label: "POST_MIGRATION" },
+    { value: "VALIDATION", label: "VALIDATION" },
+    { value: "POST_VALIDATION", label: "POST_VALIDATION" },
   ];
 
   useEffect(() => {
@@ -67,7 +69,7 @@ const Dependencies = () => {
   const fetchData = async () => {
     try {
       const response = await deploymentGroupService.search({ name: null });
-      setDeploymentGroups(response.data);
+      setDependencies(response.data);
     } catch (error) {
       ToastManager.error("Error loading data", (error as Error).message);
     }
@@ -79,32 +81,39 @@ const Dependencies = () => {
       setter(selectedOption?.value ?? null);
     };
 
-  const handleSearch = async () => {
-    try {
-      const response = await dependencyService.search({
-        sourceDeploymentGroupName: searchSourceGroup,
-        destinationDeploymentGroupName: searchDestinationGroup,
-        dependencyType: searchDependencyType,
-      });
-      setDependencies(response.data);
-    } catch (error) {
-      ToastManager.error(
-        "Error searching dependencies",
-        (error as Error).message
-      );
-    }
-  };
-
   const openAddDependencyModal = () => {
     setIsModalOpen(true);
   };
 
   const closeAddDependencyModal = () => {
     setIsModalOpen(false);
+    resetModalFields();
+  };
+
+  const resetModalFields = () => {
     setModalSourceGroup(null);
     setModalDestinationGroup(null);
     setModalDependencyType(null);
     setModalLink("");
+    setTypes([{ type: "", link: "" }]);
+  };
+
+  const handleAddType = () => {
+    setTypes([...types, { type: "", link: "" }]);
+  };
+
+  const handleTypeChange = (
+    index: number,
+    field: "type" | "link",
+    value: string
+  ) => {
+    const updatedTypes = [...types];
+    updatedTypes[index][field] = value;
+    setTypes(updatedTypes);
+  };
+
+  const removeType = (index: number) => {
+    setTypes(types.filter((_, i) => i !== index));
   };
 
   const handleAddDependency = async () => {
@@ -114,12 +123,13 @@ const Dependencies = () => {
         destinationDeploymentGroupName: modalDestinationGroup,
         dependencyType: modalDependencyType,
         link: modalLink,
+        types: types.filter((type) => type.type && type.link),
       };
 
       await dependencyService.create(newDependency);
       ToastManager.success("Success", "Dependency added successfully");
       closeAddDependencyModal();
-      handleSearch();
+      fetchData(); // Refresh dependencies
     } catch (error) {
       ToastManager.error("Error adding dependency", (error as Error).message);
     }
@@ -129,7 +139,8 @@ const Dependencies = () => {
     modalSourceGroup &&
     modalDestinationGroup &&
     modalDependencyType &&
-    modalLink
+    modalLink &&
+    types.every((type) => type.type && type.link)
   );
 
   return (
@@ -138,9 +149,9 @@ const Dependencies = () => {
         <FormControl>
           <FormLabel>Source Deployment Group</FormLabel>
           <Select
-            options={deploymentGroups.map((group) => ({
-              value: group.name,
-              label: group.name,
+            options={dependencies.map((dep) => ({
+              value: dep.sourceDeploymentGroupName,
+              label: dep.sourceDeploymentGroupName,
             }))}
             isClearable
             onChange={handleSelectChange(setSearchSourceGroup)}
@@ -149,9 +160,9 @@ const Dependencies = () => {
         <FormControl>
           <FormLabel>Destination Deployment Group</FormLabel>
           <Select
-            options={deploymentGroups.map((group) => ({
-              value: group.name,
-              label: group.name,
+            options={dependencies.map((dep) => ({
+              value: dep.destinationDeploymentGroupName,
+              label: dep.destinationDeploymentGroupName,
             }))}
             isClearable
             onChange={handleSelectChange(setSearchDestinationGroup)}
@@ -166,7 +177,7 @@ const Dependencies = () => {
           />
         </FormControl>
         <Flex alignItems="end">
-          <Button colorScheme="blue" onClick={handleSearch}>
+          <Button colorScheme="blue" onClick={fetchData}>
             Search
           </Button>
           <Button colorScheme="green" onClick={openAddDependencyModal}>
@@ -215,6 +226,7 @@ const Dependencies = () => {
         isOpen={isModalOpen}
         onClose={closeAddDependencyModal}
         closeOnOverlayClick={false}
+        size="2xl"
       >
         <ModalOverlay />
         <ModalContent>
@@ -222,48 +234,90 @@ const Dependencies = () => {
           <ModalCloseButton />
           <ModalBody>
             <Box
-              maxW="md"
+              maxW="2xl"
               mx="auto"
               p={6}
               borderWidth={1}
               borderRadius="lg"
               boxShadow="lg"
             >
-              <FormControl mb={4}>
-                <FormLabel>Source Deployment Group</FormLabel>
-                <Select
-                  options={deploymentGroups.map((group) => ({
-                    value: group.name,
-                    label: group.name,
-                  }))}
-                  onChange={handleSelectChange(setModalSourceGroup)}
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>Destination Deployment Group</FormLabel>
-                <Select
-                  options={deploymentGroups.map((group) => ({
-                    value: group.name,
-                    label: group.name,
-                  }))}
-                  onChange={handleSelectChange(setModalDestinationGroup)}
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>Dependency Type</FormLabel>
-                <Select
-                  options={dependencyTypes}
-                  onChange={handleSelectChange(setModalDependencyType)}
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>Link</FormLabel>
-                <Input
-                  value={modalLink}
-                  onChange={(e) => setModalLink(e.target.value)}
-                  placeholder="Enter dependency link"
-                />
-              </FormControl>
+              <HStack spacing={4} mb={4} mr={10}>
+                <FormControl flex="1">
+                  <FormLabel>Source Deployment Group</FormLabel>
+                  <Select
+                    options={dependencies.map((dep) => ({
+                      value: dep.sourceDeploymentGroupName,
+                      label: dep.sourceDeploymentGroupName,
+                    }))}
+                    onChange={handleSelectChange(setModalSourceGroup)}
+                  />
+                </FormControl>
+                <FormControl flex="1">
+                  <FormLabel>Destination Deployment Group</FormLabel>
+                  <Select
+                    options={dependencies.map((dep) => ({
+                      value: dep.destinationDeploymentGroupName,
+                      label: dep.destinationDeploymentGroupName,
+                    }))}
+                    onChange={handleSelectChange(setModalDestinationGroup)}
+                  />
+                </FormControl>
+              </HStack>
+
+              {/* Only one label for Dependency Type and Link */}
+              <HStack mt={6}>
+                <FormControl flex="1">
+                  <FormLabel>Dependency Type</FormLabel>
+                </FormControl>
+                <FormControl flex="1">
+                  <FormLabel>Link</FormLabel>
+                </FormControl>
+              </HStack>
+
+              {types.map((type, index) => (
+                <HStack key={index} mb={4}>
+                  <FormControl flex="1">
+                    <Select
+                      options={dependencyTypes}
+                      value={
+                        type.type
+                          ? { label: type.type, value: type.type }
+                          : null
+                      }
+                      onChange={(option) =>
+                        handleTypeChange(index, "type", option?.value || "")
+                      }
+                    />
+                  </FormControl>
+                  <FormControl flex="1">
+                    <Input
+                      value={type.link}
+                      onChange={(e) =>
+                        handleTypeChange(index, "link", e.target.value)
+                      }
+                      placeholder="Enter link"
+                      ml={2}
+                      mr={2}
+                    />
+                  </FormControl>
+
+                  <IconButton
+                    ml={2}
+                    aria-label="Remove type"
+                    icon={<DeleteIcon />}
+                    onClick={() => removeType(index)}
+                    isDisabled={types.length <= 1}
+                  />
+                </HStack>
+              ))}
+
+              <Button
+                leftIcon={<AddIcon />}
+                colorScheme="teal"
+                onClick={handleAddType}
+              >
+                Type
+              </Button>
             </Box>
           </ModalBody>
 
