@@ -29,8 +29,6 @@ import ToastManager from "../utils/ToastManager";
 import { DeploymentGroup, Script } from "../utils/Modal";
 
 const Scripts = () => {
-  const theme = useTheme();
-
   // States for search form
   const [searchSourceGroup, setSearchSourceGroup] = useState<string | null>(
     null

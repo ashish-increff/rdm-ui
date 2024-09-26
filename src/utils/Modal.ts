@@ -50,3 +50,10 @@ export interface Script{
   scriptType: string;
   link: string;
 }
+
+export interface Dependency{
+  sourceDeploymentGroupName: string;
+  destinationDeploymentGroupName: string;
+  dependencyType: string;
+  link: string;
+}
