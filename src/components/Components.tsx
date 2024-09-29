@@ -144,25 +144,25 @@ const Components = () => {
           boxShadow={"sm"}
         />
         <Button
-          colorScheme="blue"
+          colorScheme="teal"
           onClick={() => handleModalOpen("add")}
           disabled={!isFormValid()}
         >
           Add Component
         </Button>
       </HStack>
-      <Table colorScheme="gray">
+      <Table colorScheme="gray" maxW={700} mt={10}>
         <Thead backgroundColor="white">
           <Tr>
             <Th boxShadow="md" fontWeight="bold">
-              Component Name
+              Name
             </Th>
             <Th boxShadow="md" fontWeight="bold">
               POC Name
             </Th>
 
             <Th boxShadow="md" fontWeight="bold">
-              Actions
+              Action
             </Th>
           </Tr>
         </Thead>
@@ -182,7 +182,7 @@ const Components = () => {
                 </Td>
                 <Td>
                   <Button
-                    colorScheme="teal"
+                    colorScheme="blue"
                     onClick={() => handleModalOpen("edit", component)}
                   >
                     Edit

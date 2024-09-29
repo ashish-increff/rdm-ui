@@ -24,11 +24,12 @@ class HttpService {
   }
 
   updateComponent(id: number, pocEmail: String) {
-     var url = this.endpoint + "/" + id;
-     
+     var url = this.endpoint + "/" + id ;
+     url += "/poc";
       if(pocEmail!==null){
         url += "?pocEmail=" + pocEmail;
       }
+      
     return apiClient.put(url);
   }
 

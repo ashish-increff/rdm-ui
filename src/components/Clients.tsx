@@ -258,7 +258,7 @@ const Clients = () => {
           >
             Search
           </Button>
-          <Button colorScheme="blue" onClick={handleManageClientsClick} mt={3}>
+          <Button colorScheme="teal" onClick={handleManageClientsClick} mt={3}>
             Manage Clients
           </Button>
         </Flex>

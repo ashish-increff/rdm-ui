@@ -128,10 +128,11 @@ const DeploymentGroups = () => {
 
     try {
       const response =
-        await deploymentGroupService.search<SearchDeploymentGroup>({
-          name,
-          releasedVersions,
-        });
+        // await deploymentGroupService.search<SearchDeploymentGroup>({
+        //   name,
+        //   releasedVersions,
+        // });
+        await deploymentGroupService.getAll<DeploymentGroup>().request;
       setDeploymentGroups(response.data || []);
       if (type === "name" || type === "release") {
         ToastManager.success(
@@ -195,7 +196,6 @@ const DeploymentGroups = () => {
           <Tr>
             <Th boxShadow="md">Name</Th>
             <Th boxShadow="md">Description</Th>
-            <Th boxShadow="md">Remarks</Th>
             <Th boxShadow="md">Action</Th>
           </Tr>
         </Thead>
@@ -213,7 +213,6 @@ const DeploymentGroups = () => {
                 </Td>
 
                 <Td>{group.description ? group.description : "-"}</Td>
-                <Td>{group.remarks ? group.remarks : "-"}</Td>
                 <Td>
                   <Button
                     size="sm"

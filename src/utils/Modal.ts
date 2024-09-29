@@ -35,7 +35,6 @@ export interface Release {
 export interface DeploymentGroup{
     name: string;
     description: string;
-    remarks: string;
     releasedVersions: Record<string, string>;
   }
 

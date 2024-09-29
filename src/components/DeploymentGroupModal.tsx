@@ -39,7 +39,6 @@ interface DeploymentGroupModalProps {
   modalHeader?: string;
   name?: string;
   description?: string;
-  remarks?: string;
   selects?: SelectGroup[];
 }
 
@@ -49,20 +48,22 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
   modalHeader = "Create Deployment Group",
   name = "",
   description = "",
-  remarks = "",
   selects = [{ id: 1, value1: "", value2: "" }],
 }) => {
   const [selectValues, setSelectValues] = useState<SelectGroup[]>(selects);
   const [deploymentName, setDeploymentName] = useState(name);
   const [descriptionValue, setDescriptionValue] = useState(description);
-  const [remarksValue, setRemarksValue] = useState(remarks);
   const [components, setComponents] = useState<Component[]>([]);
   const [releasesMap, setReleasesMap] = useState<Map<string, Release[]>>(
     new Map()
   );
+  const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
+    []
+  );
 
   useEffect(() => {
     fetchComponents();
+    fetchDeploymentGroups();
   }, []);
 
   const fetchComponents = async () => {
@@ -72,6 +73,15 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
       setComponents(response.data);
     } catch (error) {
       ToastManager.error("Error Loading Components", (error as Error).message);
+    }
+  };
+  const fetchDeploymentGroups = async () => {
+    try {
+      const { request } = deploymentGroupService.getAll<DeploymentGroup>();
+      const response = await request;
+      setDeploymentGroups(response.data);
+    } catch (error) {
+      ToastManager.error("Error loading data", (error as Error).message);
     }
   };
 
@@ -128,7 +138,6 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
   const resetForm = () => {
     setDeploymentName("");
     setDescriptionValue("");
-    setRemarksValue("");
     setSelectValues([{ id: 1, value1: "", value2: "" }]);
     setReleasesMap(new Map());
   };
@@ -144,7 +153,6 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     const deploymentGroup: DeploymentGroup = {
       name: deploymentName,
       description: descriptionValue,
-      remarks: remarksValue,
       releasedVersions: releasedVersions,
     };
 
@@ -198,6 +206,31 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                   autoComplete="off"
                 />
               </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>
+                  Type{" "}
+                  <Text color="red.500" as="span">
+                    *
+                  </Text>
+                </FormLabel>
+                <Select
+                  options={[
+                    { label: "SPRINT", value: "SPRINT" },
+                    { label: "FEATURE", value: "FEATURE" },
+                    { label: "BUG_FIX", value: "BUG_FIX" },
+                  ]}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Base Deployment Group</FormLabel>
+                <Select
+                  options={deploymentGroups.map((group) => ({
+                    value: group.name,
+                    label: group.name,
+                  }))}
+                />
+              </FormControl>
+
               <FormControl>
                 <FormLabel>Description</FormLabel>
                 <Textarea
@@ -208,16 +241,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                   autoComplete="off"
                 />
               </FormControl>
-              <FormControl>
-                <FormLabel>Remarks</FormLabel>
-                <Textarea
-                  value={remarksValue}
-                  onChange={(e) => setRemarksValue(e.target.value)}
-                  minHeight="60px"
-                  height="60px"
-                  autoComplete="off"
-                />
-              </FormControl>
+
               <FormControl>
                 <FormLabel>
                   Components{" "}

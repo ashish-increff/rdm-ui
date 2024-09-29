@@ -68,11 +68,9 @@ const Scripts = () => {
 
   const fetchData = async () => {
     try {
-      const deploymentGroupsResponse = await deploymentGroupService.search({
-        name: null,
-        releasedVersions: null,
-      });
-      setDeploymentGroups(deploymentGroupsResponse.data);
+      const { request } = deploymentGroupService.getAll<DeploymentGroup>();
+      const response = await request;
+      setDeploymentGroups(response.data);
     } catch (error) {
       ToastManager.error("Error loading data", (error as Error).message);
     }

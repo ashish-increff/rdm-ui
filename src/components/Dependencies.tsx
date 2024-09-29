@@ -53,6 +53,9 @@ const Dependencies = () => {
   );
   const [modalLink, setModalLink] = useState<string>("");
   const [types, setTypes] = useState([{ type: "", link: "" }]);
+  const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
+    []
+  );
 
   const dependencyTypes = [
     { value: "PRE_MIGRATION", label: "PRE_MIGRATION" },
@@ -64,12 +67,23 @@ const Dependencies = () => {
 
   useEffect(() => {
     fetchData();
+    fetchDeploymentGroups();
   }, []);
 
   const fetchData = async () => {
+    // try {
+    //   const response = await deploymentGroupService.search({ name: null });
+    //   setDependencies(response.data);
+    // } catch (error) {
+    //   ToastManager.error("Error loading data", (error as Error).message);
+    // }
+  };
+
+  const fetchDeploymentGroups = async () => {
     try {
-      const response = await deploymentGroupService.search({ name: null });
-      setDependencies(response.data);
+      const { request } = deploymentGroupService.getAll<DeploymentGroup>();
+      const response = await request;
+      setDeploymentGroups(response.data);
     } catch (error) {
       ToastManager.error("Error loading data", (error as Error).message);
     }
@@ -116,6 +130,16 @@ const Dependencies = () => {
     setTypes(types.filter((_, i) => i !== index));
   };
 
+  const getFilteredOptions = (currentIndex: number) => {
+    const selectedTypes = types
+      .map((type, idx) => (idx !== currentIndex ? type.type : null))
+      .filter((type) => type !== null);
+
+    return dependencyTypes.filter(
+      (option) => !selectedTypes.includes(option.value)
+    );
+  };
+
   const handleAddDependency = async () => {
     try {
       const newDependency = {
@@ -135,11 +159,15 @@ const Dependencies = () => {
     }
   };
 
+  // Check if all required fields in the last type are filled to enable "+Type" button
+  const isAddTypeDisabled =
+    !types[types.length - 1].type || !types[types.length - 1].link;
+
   const isSubmitDisabled = !(
     modalSourceGroup &&
     modalDestinationGroup &&
-    modalDependencyType &&
-    modalLink &&
+    // modalDependencyType &&
+    // modalLink &&
     types.every((type) => type.type && type.link)
   );
 
@@ -147,40 +175,45 @@ const Dependencies = () => {
     <Box padding="4" borderRadius="md">
       <Grid templateColumns="repeat(4, 1fr)" gap={4} mb={4}>
         <FormControl>
-          <FormLabel>Source Deployment Group</FormLabel>
+          <FormLabel fontWeight="bold">Source Deployment Group</FormLabel>
           <Select
-            options={dependencies.map((dep) => ({
-              value: dep.sourceDeploymentGroupName,
-              label: dep.sourceDeploymentGroupName,
+            options={deploymentGroups.map((group) => ({
+              value: group.name,
+              label: group.name,
             }))}
             isClearable
             onChange={handleSelectChange(setSearchSourceGroup)}
+            value={
+              searchSourceGroup
+                ? { value: searchSourceGroup, label: searchSourceGroup }
+                : null
+            }
           />
         </FormControl>
         <FormControl>
-          <FormLabel>Destination Deployment Group</FormLabel>
+          <FormLabel fontWeight="bold">Destination Deployment Group</FormLabel>
           <Select
-            options={dependencies.map((dep) => ({
-              value: dep.destinationDeploymentGroupName,
-              label: dep.destinationDeploymentGroupName,
+            options={deploymentGroups.map((group) => ({
+              value: group.name,
+              label: group.name,
             }))}
             isClearable
             onChange={handleSelectChange(setSearchDestinationGroup)}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>Dependency Type</FormLabel>
-          <Select
-            options={dependencyTypes}
-            isClearable
-            onChange={handleSelectChange(setSearchDependencyType)}
+            value={
+              searchDestinationGroup
+                ? {
+                    value: searchDestinationGroup,
+                    label: searchDestinationGroup,
+                  }
+                : null
+            }
           />
         </FormControl>
         <Flex alignItems="end">
-          <Button colorScheme="blue" onClick={fetchData}>
+          <Button colorScheme="blue" onClick={fetchData} mr="15px">
             Search
           </Button>
-          <Button colorScheme="green" onClick={openAddDependencyModal}>
+          <Button colorScheme="teal" onClick={openAddDependencyModal}>
             Add Dependency
           </Button>
         </Flex>
@@ -242,30 +275,49 @@ const Dependencies = () => {
               boxShadow="lg"
             >
               <HStack spacing={4} mb={4} mr={10}>
-                <FormControl flex="1">
-                  <FormLabel>Source Deployment Group</FormLabel>
+                <FormControl mb={4}>
+                  <FormLabel>
+                    Source Deployment Group{" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </FormLabel>
                   <Select
-                    options={dependencies.map((dep) => ({
-                      value: dep.sourceDeploymentGroupName,
-                      label: dep.sourceDeploymentGroupName,
+                    options={deploymentGroups.map((group) => ({
+                      value: group.name,
+                      label: group.name,
                     }))}
                     onChange={handleSelectChange(setModalSourceGroup)}
+                    value={
+                      modalSourceGroup
+                        ? { value: modalSourceGroup, label: modalSourceGroup }
+                        : null
+                    }
                   />
                 </FormControl>
-                <FormControl flex="1">
-                  <FormLabel>Destination Deployment Group</FormLabel>
+                <FormControl mb={4}>
+                  <FormLabel>
+                    Destination Deployment Group{" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </FormLabel>
                   <Select
-                    options={dependencies.map((dep) => ({
-                      value: dep.destinationDeploymentGroupName,
-                      label: dep.destinationDeploymentGroupName,
+                    options={deploymentGroups.map((group) => ({
+                      value: group.name,
+                      label: group.name,
                     }))}
                     onChange={handleSelectChange(setModalDestinationGroup)}
+                    value={
+                      modalDestinationGroup
+                        ? {
+                            value: modalDestinationGroup,
+                            label: modalDestinationGroup,
+                          }
+                        : null
+                    }
                   />
                 </FormControl>
               </HStack>
 
               {/* Only one label for Dependency Type and Link */}
-              <HStack mt={6}>
+              <HStack mt={6} mr={7}>
                 <FormControl flex="1">
                   <FormLabel>Dependency Type</FormLabel>
                 </FormControl>
@@ -278,7 +330,7 @@ const Dependencies = () => {
                 <HStack key={index} mb={4}>
                   <FormControl flex="1">
                     <Select
-                      options={dependencyTypes}
+                      options={getFilteredOptions(index)}
                       value={
                         type.type
                           ? { label: type.type, value: type.type }
@@ -302,7 +354,7 @@ const Dependencies = () => {
                   </FormControl>
 
                   <IconButton
-                    ml={2}
+                    ml={1}
                     aria-label="Remove type"
                     icon={<DeleteIcon />}
                     onClick={() => removeType(index)}
@@ -315,6 +367,7 @@ const Dependencies = () => {
                 leftIcon={<AddIcon />}
                 colorScheme="teal"
                 onClick={handleAddType}
+                isDisabled={isAddTypeDisabled}
               >
                 Type
               </Button>
