@@ -39,9 +39,7 @@ const Releases = () => {
     null
   );
   const [releases, setReleases] = useState<Release[]>([]);
-  const [filteredReleases, setFilteredReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [selectedReleaseType, setSelectedReleaseType] = useState<string>("ALL");
   const [isBugModalOpen, setBugModalOpen] = useState(false);
   const [selectedRelease, setSelectedRelease] = useState<Release | null>(null);
 
@@ -50,7 +48,6 @@ const Releases = () => {
     return (
       newRelease.componentId > 0 &&
       newRelease.name.trim() !== "" &&
-      newRelease.releaseType !== "" &&
       newRelease.componentVersion.trim() !== ""
     );
   };
@@ -61,7 +58,6 @@ const Releases = () => {
     componentId: 0,
     name: "",
     description: "",
-    releaseType: "SPRINT",
     componentVersion: "",
   });
 
@@ -84,22 +80,10 @@ const Releases = () => {
         componentId
       );
       setReleases(response.data);
-      setFilteredReleases(response.data);
     } catch (error) {
       ToastManager.error("Error Loading Releases", (error as Error).message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Filter releases based on type
-  const filterReleases = (type: string | null) => {
-    if (type === null || type === "ALL") {
-      setFilteredReleases(releases);
-    } else {
-      setFilteredReleases(
-        releases.filter((release) => release.releaseType === type)
-      );
     }
   };
 
@@ -109,6 +93,9 @@ const Releases = () => {
       const response = await releaseService.create(newRelease);
       ToastManager.success("Success", "Release created successfully!");
       setModalOpen(false);
+      if (selectedComponent) {
+        fetchReleases(selectedComponent); // Refresh the releases after submission
+      }
     } catch (error) {
       ToastManager.error("Error creating release", (error as Error).message);
     }
@@ -121,13 +108,8 @@ const Releases = () => {
   useEffect(() => {
     if (selectedComponent) {
       fetchReleases(selectedComponent);
-      setSelectedReleaseType("ALL"); // Reset release type when component changes
     }
   }, [selectedComponent]);
-
-  useEffect(() => {
-    filterReleases(selectedReleaseType);
-  }, [selectedReleaseType, releases]);
 
   return (
     <Box p={4} bg={useTheme().colors.background} color={useTheme().colors.text}>
@@ -153,30 +135,6 @@ const Releases = () => {
             options={components.map((c) => ({ label: c.name, value: c.id }))}
           />
         </FormControl>
-        <FormControl width="200px" isDisabled={!selectedComponent}>
-          <FormLabel>Release Type</FormLabel>
-          <Select
-            value={{
-              label:
-                selectedReleaseType === "ALL" ? "All" : selectedReleaseType,
-              value: selectedReleaseType,
-            }}
-            onChange={(
-              option: SingleValue<{ label: string; value: string }>
-            ) => {
-              const selectedValue = option ? option.value : "ALL"; // Default to "ALL" if option is null
-              setSelectedReleaseType(selectedValue);
-            }}
-            options={[
-              { label: "All", value: "ALL" },
-              { label: "SPRINT", value: "SPRINT" },
-              { label: "FEATURE", value: "FEATURE" },
-              { label: "BUG_FIX", value: "BUG_FIX" },
-            ]}
-            isClearable
-            isDisabled={!selectedComponent}
-          />
-        </FormControl>
       </HStack>
       <Box mt={8}>
         {loading ? (
@@ -187,19 +145,17 @@ const Releases = () => {
               <Tr>
                 <Th boxShadow="md">Name</Th>
                 <Th boxShadow="md">Version</Th>
-                <Th boxShadow="md">Release Type</Th>
                 <Th boxShadow="md">Description</Th>
                 <Th boxShadow="md">Contains Bug</Th>
                 <Th boxShadow="md">Action</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {filteredReleases.length > 0 ? (
-                filteredReleases.map((release, index) => (
+              {releases.length > 0 ? (
+                releases.map((release, index) => (
                   <Tr key={index} _hover={{ bg: "gray.100" }}>
                     <Td>{release.name}</Td>
                     <Td>{release.componentVersion}</Td>
-                    <Td>{release.releaseType}</Td>
                     <Td
                       sx={{
                         maxWidth: "300px",
@@ -323,33 +279,6 @@ const Releases = () => {
               </FormControl>
               <FormControl mb={4}>
                 <FormLabel>
-                  Release Type{" "}
-                  <Text color="red.500" as="span">
-                    *
-                  </Text>
-                </FormLabel>
-                <Select
-                  value={{
-                    label: newRelease.releaseType,
-                    value: newRelease.releaseType,
-                  }}
-                  onChange={(
-                    option: SingleValue<{ label: string; value: string }>
-                  ) =>
-                    setNewRelease({
-                      ...newRelease,
-                      releaseType: option ? option.value : "",
-                    })
-                  }
-                  options={[
-                    { label: "SPRINT", value: "SPRINT" },
-                    { label: "FEATURE", value: "FEATURE" },
-                    { label: "BUG_FIX", value: "BUG_FIX" },
-                  ]}
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>
                   Component Version{" "}
                   <Text color="red.500" as="span">
                     *
@@ -387,6 +316,7 @@ const Releases = () => {
         </ModalContent>
       </Modal>
 
+      {/* Modal for marking release as bug */}
       <Modal
         isOpen={isBugModalOpen}
         onClose={() => setBugModalOpen(false)}
@@ -418,7 +348,6 @@ const Releases = () => {
                   try {
                     await releaseService.markAsBug(selectedRelease.id);
                     ToastManager.success("Success", "Release marked as bug!");
-                    // Refresh or update the releases if necessary
                     if (selectedComponent) {
                       fetchReleases(selectedComponent);
                     }
