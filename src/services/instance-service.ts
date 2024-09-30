@@ -1,4 +1,4 @@
 import create from "./https-service";
 
 
-export default create('/client');
+export default create('/instance');

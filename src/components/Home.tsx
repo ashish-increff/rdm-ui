@@ -42,7 +42,7 @@ const Home: React.FC = () => {
           title="Masters"
           items={[
             { label: "Components", icon: <FaTools color="red.400" /> },
-            { label: "Clients", icon: <FaUserFriends color="red.400" /> },
+            { label: "Instances", icon: <FaUserFriends color="red.400" /> },
           ]}
           color="red.400"
         />
@@ -101,8 +101,8 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     if (label === "Components") {
       navigate("/components");
     }
-    if (label === "Clients") {
-      navigate("/clients");
+    if (label === "Instances") {
+      navigate("/instances");
     }
     if (label === "Releases") {
       navigate("/releases");

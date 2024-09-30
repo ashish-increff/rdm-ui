@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import clientService from "../services/client-service";
+import clientService from "../services/instance-service";
 import {
   Box,
   Table,

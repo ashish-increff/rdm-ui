@@ -79,6 +79,24 @@ class HttpService {
     return apiClient.put(url);
   }
 
+  addInstanceComponents<T>(instanceId:number, componentIds:number[]) {
+    var url = this.endpoint + "/" + instanceId + "/components";
+    console.log("url", url);
+    return apiClient.post(url, componentIds);
+  }
+
+  updateInstanceManagement<T>(instanceId:number, primaryPocEmail:string, secondaryPocEmail:string, deploymentOnHold:boolean) {
+    var url = this.endpoint + "/" + instanceId + "/management";
+    
+    return apiClient.put(url, {}, {
+      params: {primaryPocEmail, secondaryPocEmail, deploymentOnHold}
+    });
+  }
+
+  updateInstanceDetails<T>(instanceId:number, formData: any) {
+    var url = this.endpoint + "/" + instanceId + "/details";
+    return apiClient.put(url, formData);
+  }
 }
 
 

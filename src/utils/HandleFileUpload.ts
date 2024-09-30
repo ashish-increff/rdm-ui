@@ -1,7 +1,7 @@
 import Papa from "papaparse";
 import ToastManager from "./ToastManager";
 import { AxiosResponse } from "axios";
-import clientService from "../services/client-service";
+import clientService from "../services/instance-service";
 import { handleError } from "./ErrorHandler";
 
 interface FileUploadOptions {

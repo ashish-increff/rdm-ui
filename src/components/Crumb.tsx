@@ -21,7 +21,7 @@ const Crumb = () => {
   // Mapping of route URLs to display names
   const routeMapping: { [key: string]: string } = {
     components: "Components",
-    clients: "Clients",
+    instances: "Instances",
     releases: "Releases",
     deployments: "Deployments",
     "deployment-groups": "Deployment Groups",

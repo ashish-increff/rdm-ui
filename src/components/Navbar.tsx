@@ -89,8 +89,8 @@ const Navbar = () => {
               <LinkWrapper to="/components" onClose={onClose} color="red.500">
                 Components
               </LinkWrapper>
-              <LinkWrapper to="/clients" onClose={onClose} color="red.500">
-                Clients
+              <LinkWrapper to="/instances" onClose={onClose} color="red.500">
+                Instances
               </LinkWrapper>
               <LinkWrapper to="/releases" onClose={onClose} color="green.500">
                 Releases

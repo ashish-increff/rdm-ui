@@ -4,7 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./components/Home";
 import Components from "./components/Components";
-import Clients from "./components/Clients";
+import Instances from "./components/Instances";
 import Crumb from "./components/Crumb";
 import Releases from "./components/Releases";
 import DeploymentGroup from "./components/DeploymentGroup";
@@ -21,13 +21,13 @@ const App: React.FC = () => {
       <Crumb />
       <Box
         paddingTop={{ base: "100px", md: "110px" }}
-        bg="#f8f9fa"
+        // bg="#f8f9fa"
         minHeight="100vh"
       >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/components" element={<Components />} />
-          <Route path="/clients" element={<Clients />} />
+          <Route path="/instances" element={<Instances />} />
           <Route path="/releases" element={<Releases />} />
           <Route path="/deployment-groups" element={<DeploymentGroup />} />
           <Route path="/deployments" element={<Deployment />} />

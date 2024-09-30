@@ -29,6 +29,7 @@ import componentService from "../services/component-service";
 import ToastManager from "../utils/ToastManager";
 import { Component } from "../utils/Modal";
 import { handleError } from "../utils/ErrorHandler";
+import { FaUserEdit } from "react-icons/fa";
 
 const Components = () => {
   const [components, setComponents] = useState<Component[]>([]);
@@ -181,12 +182,13 @@ const Components = () => {
                   </Tooltip>
                 </Td>
                 <Td>
-                  <Button
-                    colorScheme="blue"
+                  <FaUserEdit
+                    color="#4299e1"
+                    style={{ cursor: "pointer" }}
+                    title="Edit Component POC"
+                    size="1.5em"
                     onClick={() => handleModalOpen("edit", component)}
-                  >
-                    Edit
-                  </Button>
+                  />
                 </Td>
               </Tr>
             ))

@@ -9,17 +9,25 @@ export interface Component {
     version: string;
   } 
 
-export interface Client {
+export interface Instance {
+    id: number;
     name: string;
-    liveDeploymentGroup: string;
-    domainUrl: string;
+    client: string;
     deploymentOnHold: boolean;
-    deploymentPriority: number;
     primaryPocName: string;
     primaryPocEmail: string;
     secondaryPocName: string;
     secondaryPocEmail: string;
-    isActive: boolean;
+    sqlMachineName: string;
+    gceBucket: string;
+    apiUrl: string;
+    urlMap: string;
+    authDomain: string;
+    projectId: string;
+    zoneId: string;
+    orgId: string;
+    status: string;
+
     componentVersions:ComponentVersion[];
   }
 
