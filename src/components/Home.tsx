@@ -125,6 +125,9 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     if (label === "Downtime") {
       navigate("/downtime");
     }
+    if (label == "Audit Log") {
+      navigate("/audit-log");
+    }
     // Add more routes here if needed
   };
 

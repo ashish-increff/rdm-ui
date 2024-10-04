@@ -29,6 +29,7 @@ const Crumb = () => {
     downtime: "Components",
     scripts: "Scripts",
     dependencies: "Dependencies",
+    "audit-log": "Audit Log",
     // Add more mappings as needed
   };
 

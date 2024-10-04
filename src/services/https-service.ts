@@ -102,6 +102,12 @@ class HttpService {
     var url = this.endpoint + "/" + releaseId;
     return apiClient.get(url);
   }
+
+  getAudit<T>(type: string, id?: string) {
+    var url = this.endpoint + "/" + type;
+    url += "?objectId=" + id;
+    return apiClient.get(url);
+  }
 }
 
 
