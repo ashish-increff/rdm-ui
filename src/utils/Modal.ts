@@ -5,6 +5,7 @@ export interface Component {
     pocEmail: string;
   }
  export interface ComponentVersion {
+  releaseId: number;
     name: string;
     version: string;
   } 
@@ -41,9 +42,13 @@ export interface Release {
   }
 
 export interface DeploymentGroup{
+  id: number;
     name: string;
     description: string;
-    releasedVersions: Record<string, string>;
+    releaseIds: number[];
+    type: string| null;
+    baseDeploymentGroupId: number | null;
+    releaseVersions:ComponentVersion[];
   }
 
 export interface SearchDeploymentGroup{

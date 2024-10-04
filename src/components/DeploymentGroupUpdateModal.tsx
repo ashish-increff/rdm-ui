@@ -24,7 +24,7 @@ import Select, { SingleValue } from "react-select";
 import componentService from "../services/component-service";
 import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
-import { Component, Release, DeploymentGroup } from "../utils/Modal";
+import { Component, Release, ComponentVersion } from "../utils/Modal";
 import deploymentGroupService from "../services/deployment-group-service";
 
 interface SelectGroup {
@@ -33,34 +33,43 @@ interface SelectGroup {
   releaseId: number;
 }
 
-interface DeploymentGroupModalProps {
+interface DeploymentGroupUpdateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  name: string;
+  id: number;
+  description: string;
+  releaseVersions: ComponentVersion[];
 }
 
-const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
+const DeploymentGroupUpdateModal: React.FC<DeploymentGroupUpdateModalProps> = ({
   isOpen,
   onClose,
+  name,
+  id,
+  description,
+  releaseVersions,
 }) => {
+  console.log("check");
   const [selectValues, setSelectValues] = useState<SelectGroup[]>([
     { id: 1, componentId: 0, releaseId: 0 },
   ]);
-  const [deploymentName, setDeploymentName] = useState("");
-  const [descriptionValue, setDescriptionValue] = useState("");
+  const [descriptionValue, setDescriptionValue] = useState(description);
   const [components, setComponents] = useState<Component[]>([]);
-  const [releasesMap, setReleasesMap] = useState<Map<string, Release[]>>(
+  const [releasesMap, setReleasesMap] = useState<Map<number, Release[]>>(
     new Map()
   );
-  const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
-    []
-  );
-  const [baseDeploymentGroupId, setBaseDeploymentGroupId] = useState<number>(0);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [initialSelectedComponentIds, setInitialSelectedComponentIds] =
+    useState<number[]>([]);
 
   useEffect(() => {
-    fetchComponents();
-    fetchDeploymentGroups();
-  }, []);
+    const loadData = async () => {
+      await fetchComponents();
+      initializeSelectValues();
+    };
+    setDescriptionValue(description);
+    loadData();
+  }, [releaseVersions, description]);
 
   const fetchComponents = async () => {
     try {
@@ -72,27 +81,27 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     }
   };
 
-  const fetchDeploymentGroups = async () => {
-    try {
-      const { request } = deploymentGroupService.getAll<DeploymentGroup>();
-      const response = await request;
-      setDeploymentGroups(response.data);
-    } catch (error) {
-      ToastManager.error("Error loading data", (error as Error).message);
-    }
-  };
-
-  const fetchReleases = async (componentId: number) => {
-    try {
-      const response = await releaseService.getByComponentId<Release[]>(
-        componentId
-      );
-      setReleasesMap((prevReleasesMap) =>
-        new Map(prevReleasesMap).set(componentId.toString(), response.data)
-      );
-    } catch (error) {
-      ToastManager.error("Error Loading Releases", (error as Error).message);
-    }
+  const initializeSelectValues = async () => {
+    console.log("releaseVersions", releaseVersions);
+    const initialSelectValues: SelectGroup[] = await Promise.all(
+      releaseVersions.map(async (releaseVersion, index) => {
+        const releaseDetails = await releaseService.getReleaseById<Release>(
+          releaseVersion.releaseId
+        );
+        const componentId: number = components.find(
+          (component) => component.name === releaseDetails.data.componentName
+        )?.id as number;
+        fetchReleases(componentId);
+        return {
+          id: index + 1,
+          componentId: componentId,
+          releaseId: releaseVersion.releaseId,
+        };
+      })
+    );
+    const initialIds = initialSelectValues.map((select) => select.componentId);
+    setInitialSelectedComponentIds(initialIds); // Update state here
+    setSelectValues(initialSelectValues);
   };
 
   const handleSelectChange = (
@@ -108,7 +117,6 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
           ? {
               ...select,
               [field]: selectedValue,
-              ...(field === "componentId" && { releaseId: 0 }),
             }
           : select
       )
@@ -119,16 +127,17 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     }
   };
 
-  const handleTypeChange = (
-    value: SingleValue<{ label: string; value: string }>
-  ) => {
-    setSelectedType(value ? value.value : null);
-  };
-
-  const handleBaseDeploymentGroupChange = (
-    value: SingleValue<{ label: string; value: number }>
-  ) => {
-    setBaseDeploymentGroupId(value ? value.value : 0);
+  const fetchReleases = async (componentId: number) => {
+    try {
+      const response = await releaseService.getByComponentId<Release[]>(
+        componentId
+      );
+      setReleasesMap((prevReleasesMap) =>
+        new Map(prevReleasesMap).set(componentId, response.data)
+      );
+    } catch (error) {
+      ToastManager.error("Error Loading Releases", (error as Error).message);
+    }
   };
 
   const addMoreComponents = () => {
@@ -144,45 +153,30 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     );
   };
 
-  const resetForm = () => {
-    setDeploymentName("");
-    setDescriptionValue("");
-    setSelectValues([{ id: 1, componentId: 0, releaseId: 0 }]);
-    setReleasesMap(new Map());
-    setBaseDeploymentGroupId(0);
-    setSelectedType(null);
-  };
-
   const handleSubmit = async () => {
     const releaseIds: number[] = selectValues
       .filter((select) => select.releaseId)
       .map((select) => select.releaseId);
 
     const deploymentGroup = {
-      name: deploymentName,
+      id,
+      name, // Use the name prop directly here
       description: descriptionValue,
-      type: selectedType,
-      baseDeploymentGroupId,
       releaseIds,
     };
 
     try {
-      await deploymentGroupService.create(deploymentGroup);
-      ToastManager.success("Success", "Deployment Group created successfully");
+      await deploymentGroupService.update(deploymentGroup);
+      ToastManager.success("Success", "Deployment Group updated successfully");
       resetForm();
       onClose();
     } catch (error) {
       ToastManager.error(
-        "Error creating Deployment Group",
+        "Error updating Deployment Group",
         (error as Error).message
       );
     }
   };
-
-  const isSubmitDisabled =
-    !deploymentName.trim() ||
-    !selectedType ||
-    !selectValues.some((select) => select.componentId && select.releaseId);
 
   return (
     <Modal
@@ -193,7 +187,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Create Deployment Group</ModalHeader>
+        <ModalHeader>Update Deployment Group</ModalHeader>
         <ModalBody>
           <Box
             maxW="lg"
@@ -205,47 +199,10 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
           >
             <VStack spacing={4}>
               <FormControl>
-                <FormLabel>
-                  Name{" "}
-                  <Text color="red.500" as="span">
-                    *
-                  </Text>
-                </FormLabel>
-                <Input
-                  value={deploymentName}
-                  onChange={(e) => setDeploymentName(e.target.value)}
-                  autoComplete="off"
-                />
+                <FormLabel>Name</FormLabel>
+                <Input value={name} isDisabled />
               </FormControl>
               <FormControl mb={4}>
-                <FormLabel>
-                  Type{" "}
-                  <Text color="red.500" as="span">
-                    *
-                  </Text>
-                </FormLabel>
-                <Select
-                  options={[
-                    { label: "SPRINT", value: "SPRINT" },
-                    { label: "FEATURE", value: "FEATURE" },
-                    { label: "BUG_FIX", value: "BUG_FIX" },
-                  ]}
-                  onChange={handleTypeChange}
-                />
-              </FormControl>
-              {selectedType === "BUG_FIX" && (
-                <FormControl>
-                  <FormLabel>Base Deployment Group</FormLabel>
-                  <Select
-                    options={deploymentGroups.map((group) => ({
-                      value: group.id,
-                      label: group.name,
-                    }))}
-                    onChange={handleBaseDeploymentGroupChange}
-                  />
-                </FormControl>
-              )}
-              <FormControl>
                 <FormLabel>Description</FormLabel>
                 <Textarea
                   value={descriptionValue}
@@ -296,8 +253,12 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                               label: component.name,
                               value: component.id,
                             }))}
+                          isDisabled={initialSelectedComponentIds.includes(
+                            select.componentId
+                          )}
                         />
                       </div>
+
                       <div style={{ width: "200px" }}>
                         <Select
                           placeholder="Select Version"
@@ -306,18 +267,15 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                               ? {
                                   label:
                                     (
-                                      releasesMap.get(
-                                        select.componentId.toString()
-                                      ) || []
+                                      releasesMap.get(select.componentId) || []
                                     ).find(
                                       (release) =>
                                         release.id === select.releaseId
                                     )?.componentVersion +
                                       " : " +
                                       (
-                                        releasesMap.get(
-                                          select.componentId.toString()
-                                        ) || []
+                                        releasesMap.get(select.componentId) ||
+                                        []
                                       ).find(
                                         (release) =>
                                           release.id === select.releaseId
@@ -330,23 +288,25 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                             handleSelectChange(select.id, "releaseId", e)
                           }
                           options={(
-                            releasesMap.get(select.componentId.toString()) || []
+                            releasesMap.get(select.componentId) || []
                           ).map((release) => ({
                             label:
                               release.componentVersion + " : " + release.name,
                             value: release.id,
                           }))}
-                          isDisabled={!select.componentId}
                         />
                       </div>
                       <div style={{ width: "20px" }}>
-                        {index > 0 && (
-                          <IconButton
-                            aria-label="Delete select group"
-                            icon={<DeleteIcon />}
-                            onClick={() => removeSelectGroup(select.id)}
-                          />
-                        )}
+                        {index > 0 &&
+                          !initialSelectedComponentIds.includes(
+                            select.componentId
+                          ) && (
+                            <IconButton
+                              aria-label="Delete select group"
+                              icon={<DeleteIcon />}
+                              onClick={() => removeSelectGroup(select.id)}
+                            />
+                          )}
                       </div>
                     </HStack>
                     {index < selectValues.length - 1 && (
@@ -376,12 +336,8 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
             <Button colorScheme="gray" mr={3} onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              colorScheme="blue"
-              onClick={handleSubmit}
-              isDisabled={isSubmitDisabled}
-            >
-              Submit
+            <Button colorScheme="blue" onClick={handleSubmit}>
+              Update
             </Button>
           </Flex>
         </ModalFooter>
@@ -390,4 +346,9 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
   );
 };
 
-export default DeploymentGroupModal;
+export default DeploymentGroupUpdateModal;
+
+function resetForm() {
+  // Reset logic here if needed
+  console.log("Resetting form");
+}

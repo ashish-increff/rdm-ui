@@ -53,7 +53,7 @@ class HttpService {
   }
 
   update<T extends Entity>(entity: T) {
-    return apiClient.patch(this.endpoint + "/" + entity.id, entity);
+    return apiClient.put(this.endpoint + "/" + entity.id, entity);
   }
 
   bulkUpdate<T>(entities: T[]) {
@@ -96,6 +96,11 @@ class HttpService {
   updateInstanceDetails<T>(instanceId:number, formData: any) {
     var url = this.endpoint + "/" + instanceId + "/details";
     return apiClient.put(url, formData);
+  }
+
+  getReleaseById<T>(releaseId:number) {
+    var url = this.endpoint + "/" + releaseId;
+    return apiClient.get(url);
   }
 }
 

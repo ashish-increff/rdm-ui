@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Input,
   Flex,
   Table,
   Thead,
@@ -11,43 +10,41 @@ import {
   Th,
   Td,
   Stack,
-  useTheme,
   Link,
 } from "@chakra-ui/react";
 import { FaEdit } from "react-icons/fa";
-import componentService from "../services/component-service";
-import releaseService from "../services/release-service";
 import deploymentGroupService from "../services/deployment-group-service";
 import DeploymentGroupModal from "./DeploymentGroupModal";
+import DeploymentGroupUpdateModal from "./DeploymentGroupUpdateModal";
 import ToastManager from "../utils/ToastManager";
-import {
-  Component,
-  Release,
-  SearchDeploymentGroup,
-  DeploymentGroup,
-} from "../utils/Modal";
+import { DeploymentGroup } from "../utils/Modal";
 import SearchByReleasedVersion from "./SearchByReleasedVersion";
 import { CustomInput, CustomTh } from "../utils/CustomComponents";
 
 const DeploymentGroups = () => {
-  const theme = useTheme();
-  const [components, setComponents] = useState<Component[]>([]);
-  const [releaseOptions, setReleaseOptions] = useState<
-    Record<string, OptionType[]>
-  >({});
   const [searchValue, setSearchValue] = useState("");
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
   );
-  const [isOpen, setIsOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchByVersion, setSearchByVersion] = useState(false);
   const [componentReleaseGroups, setComponentReleaseGroups] = useState<
     { id: number; component: string; release: string }[]
   >([{ id: 1, component: "", release: "" }]);
 
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedDeploymentGroup, setSelectedDeploymentGroup] =
+    useState<DeploymentGroup | null>(null);
+
+  const openAddModal = () => setIsAddModalOpen(true);
+  const closeAddModal = () => setIsAddModalOpen(false);
   const [show, setShow] = useState<{ [key: string]: boolean }>({});
+
+  const openUpdateModal = (group: DeploymentGroup) => {
+    setSelectedDeploymentGroup(group);
+    setIsUpdateModalOpen(true);
+    console.log("selectedDeploymentGroup", selectedDeploymentGroup?.name);
+  };
 
   const handleToggle = (
     event: React.MouseEvent<HTMLAnchorElement>,
@@ -71,45 +68,8 @@ const DeploymentGroups = () => {
   };
 
   useEffect(() => {
-    fetchComponents();
     handleSubmit();
   }, []);
-
-  const fetchComponents = async () => {
-    try {
-      const response = await componentService.getAll<Component>().request;
-      setComponents(response.data);
-
-      response.data.forEach((component) => {
-        fetchReleases(component.name, component.id);
-      });
-    } catch (error) {
-      console.error(error);
-      ToastManager.error("Error Loading Components", (error as Error).message);
-    }
-  };
-
-  const fetchReleases = async (componentName: string, componenntId: number) => {
-    try {
-      const response = await releaseService.getByComponentId<Release[]>(
-        componenntId
-      );
-      const releases = response.data;
-      const options = releases.map(
-        (release: { componentVersion: string; name: string }) => ({
-          value: release.componentVersion + ": " + release.name,
-          label: release.componentVersion + ": " + release.name,
-        })
-      );
-
-      setReleaseOptions((prevOptions) => ({
-        ...prevOptions,
-        [componentName]: [...options],
-      }));
-    } catch (error) {
-      ToastManager.error("Error Loading Releases", (error as Error).message);
-    }
-  };
 
   const handleSubmit = async (type?: "release" | "name") => {
     let name: string | null = null;
@@ -182,7 +142,7 @@ const DeploymentGroups = () => {
           >
             Search
           </Button>
-          <Button colorScheme="teal" onClick={openModal}>
+          <Button colorScheme="teal" onClick={openAddModal}>
             Add Group
           </Button>
         </Flex>
@@ -197,6 +157,7 @@ const DeploymentGroups = () => {
         <Thead backgroundColor="white">
           <Tr>
             <Th boxShadow="md">Name</Th>
+            <Th boxShadow="md">Type</Th>
             <Th boxShadow="md">Description</Th>
             <Th boxShadow="md">Action</Th>
           </Tr>
@@ -213,19 +174,23 @@ const DeploymentGroups = () => {
                     {group.name}
                   </Link>
                 </Td>
+                <Td>{group.type}</Td>
 
                 <Td>{group.description ? group.description : "-"}</Td>
+
                 <Td>
-                  <Button
-                    size="sm"
-                    leftIcon={<FaEdit />}
-                    onClick={() => console.log("Edit")}
-                  ></Button>
+                  <FaEdit
+                    color="#4299e1"
+                    style={{ cursor: "pointer" }}
+                    title="Edit Deployment Group"
+                    size="1.5em"
+                    onClick={() => openUpdateModal(group)} // Pass the current group to the function
+                  />
                 </Td>
               </Tr>
               {show[group.name] && (
                 <Tr>
-                  <Td colSpan={8}>
+                  <Td colSpan={2}>
                     <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
                       <Table variant="simple" backgroundColor="white">
                         <Thead>
@@ -234,15 +199,14 @@ const DeploymentGroups = () => {
                             <CustomTh>Version</CustomTh>
                           </Tr>
                         </Thead>
+
                         <Tbody>
-                          {Object.entries(group.releasedVersions).map(
-                            ([key, value]) => (
-                              <Tr key={key} _hover={{ bg: "gray.100" }}>
-                                <Td>{key}</Td>
-                                <Td>{value}</Td>
-                              </Tr>
-                            )
-                          )}
+                          {group.releaseVersions.map(({ name, version }) => (
+                            <Tr key={name} _hover={{ bg: "gray.100" }}>
+                              <Td>{name}</Td>
+                              <Td>{version ? version : "-"}</Td>
+                            </Tr>
+                          ))}
                         </Tbody>
                       </Table>
                     </Box>
@@ -254,7 +218,15 @@ const DeploymentGroups = () => {
         </Tbody>
       </Table>
 
-      <DeploymentGroupModal isOpen={isOpen} onClose={closeModal} />
+      <DeploymentGroupModal isOpen={isAddModalOpen} onClose={closeAddModal} />
+      <DeploymentGroupUpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        name={selectedDeploymentGroup?.name || ""}
+        id={selectedDeploymentGroup?.id || 0}
+        description={selectedDeploymentGroup?.description || ""}
+        releaseVersions={selectedDeploymentGroup?.releaseVersions || []}
+      />
     </Box>
   );
 };
