@@ -15,30 +15,33 @@ import {
 import Select from "react-select";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import deploymentGroupService from "../services/deployment-group-service";
+import instanceService from "../services/instance-service";
 import ToastManager from "../utils/ToastManager";
-import { DeploymentGroup } from "../utils/Modal";
+import { DeploymentGroup, Instance } from "../utils/Modal";
 
 const CreateDeployment = () => {
   const theme = useTheme();
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
   );
+  const [instances, setInstances] = useState<Instance[]>([]);
+
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-  const [clientSelection, setClientSelection] = useState<string>("selected");
-  const [clientData, setClientData] = useState<any[]>([
-    { client: null, scriptRequired: "True", isUrgent: "False" },
+  const [instanceSelection, setInstanceSelection] =
+    useState<string>("selected");
+  const [instanceData, setInstanceData] = useState<any[]>([
+    { instance: null, scriptRequired: "True", isUrgent: "False" },
   ]);
 
   useEffect(() => {
     fetchDeploymentGroups();
+    fetchInstances();
   }, []);
 
   const fetchDeploymentGroups = async () => {
     try {
-      const response = await deploymentGroupService.search({
-        name: null,
-        releasedVersions: null,
-      });
+      const { request } = deploymentGroupService.getAll<DeploymentGroup>();
+      const response = await request;
       setDeploymentGroups(response.data);
     } catch (error) {
       ToastManager.error(
@@ -48,44 +51,61 @@ const CreateDeployment = () => {
     }
   };
 
+  const fetchInstances = async () => {
+    try {
+      const { request } = instanceService.getAll<Instance>();
+      const response = await request;
+      setInstances(response.data);
+    } catch (error) {
+      ToastManager.error("Error loading instances", (error as Error).message);
+    }
+  };
+
   const handleSelectChange = (selectedOption: any) => {
     setSelectedGroup(selectedOption ? selectedOption.value : null);
   };
 
-  const handleClientSelectionChange = (value: string) => {
-    setClientSelection(value);
+  const handleInstanceSelectionChange = (value: string) => {
+    setInstanceSelection(value);
   };
 
-  const handleClientDataChange = (index: number, field: string, value: any) => {
-    const newClientData = [...clientData];
-    newClientData[index][field] = value;
-    setClientData(newClientData);
+  const handleInstanceDataChange = (
+    index: number,
+    field: string,
+    value: any
+  ) => {
+    const newInstanceData = [...instanceData];
+    newInstanceData[index][field] = value;
+    setInstanceData(newInstanceData);
   };
 
-  const handleAddClient = () => {
-    setClientData([
-      ...clientData,
-      { client: null, scriptRequired: "True", isUrgent: "False" },
+  const handleAddInstance = () => {
+    setInstanceData([
+      ...instanceData,
+      { instance: null, scriptRequired: "True", isUrgent: "False" },
     ]);
   };
 
-  const handleRemoveClient = (index: number) => {
-    const newClientData = [...clientData];
-    newClientData.splice(index, 1);
-    setClientData(newClientData);
+  const handleRemoveInstance = (index: number) => {
+    const newInstanceData = [...instanceData];
+    newInstanceData.splice(index, 1);
+    setInstanceData(newInstanceData);
   };
 
-  const isAddClientButtonDisabled = () => {
-    return clientData.some(
+  const isAddInstanceButtonDisabled = () => {
+    return instanceData.some(
       (data) =>
-        data.client === null ||
+        data.instance === null ||
         data.scriptRequired === null ||
         data.isUrgent === null
     );
   };
 
   const handleCreateDeployments = () => {
-    ToastManager.success("Success", "Creating deployments for all clients...");
+    ToastManager.success(
+      "Success",
+      "Creating deployments for all instances..."
+    );
     // Add your deployment creation logic here
   };
 
@@ -118,17 +138,17 @@ const CreateDeployment = () => {
 
           <FormControl>
             <HStack align="center" spacing={8} w="100%">
-              <FormLabel fontWeight="bold" minW="150px">
+              <FormLabel fontWeight="bold" minW="142px">
                 Required For
               </FormLabel>
               <Box flex="1">
                 <RadioGroup
-                  onChange={handleClientSelectionChange}
-                  value={clientSelection}
+                  onChange={handleInstanceSelectionChange}
+                  value={instanceSelection}
                 >
                   <Stack direction="row" spacing={4}>
-                    <Radio value="selected">Selected Clients</Radio>
-                    <Radio value="all">All Clients</Radio>
+                    <Radio value="selected">Selected Instances</Radio>
+                    <Radio value="all">All Instances</Radio>
                   </Stack>
                 </RadioGroup>
               </Box>
@@ -136,20 +156,20 @@ const CreateDeployment = () => {
           </FormControl>
         </VStack>
 
-        {/* Lower Section with Clients, Script Required, Is Urgent */}
-        {clientSelection === "selected" && (
+        {/* Lower Section with Instances, Script Required, Is Urgent */}
+        {instanceSelection === "selected" && (
           <VStack align="start" w="100%">
             {/* Headings for the select groups */}
             <HStack spacing={4} align="center" w="100%" pl="195px">
               <Box flex="2" textAlign="center">
-                <FormLabel fontWeight="bold">Clients</FormLabel>
+                <FormLabel fontWeight="bold">Instances</FormLabel>
               </Box>
               <Box flex="1.5" textAlign="center" minWidth="400px" pl="235px">
                 <FormLabel fontWeight="bold">Is Urgent</FormLabel>
               </Box>
             </HStack>
 
-            {clientData.map((data, index) => (
+            {instanceData.map((data, index) => (
               <HStack
                 key={index}
                 spacing={4}
@@ -159,14 +179,14 @@ const CreateDeployment = () => {
               >
                 <Box flex="2">
                   <Select
-                    placeholder="Select Client"
-                    options={deploymentGroups.map((group) => ({
-                      value: group.name,
-                      label: group.name,
+                    placeholder="Select Instance"
+                    options={instances.map((instance) => ({
+                      value: instance.name,
+                      label: instance.name,
                     }))}
-                    value={data.client}
+                    value={data.instance}
                     onChange={(option) =>
-                      handleClientDataChange(index, "client", option)
+                      handleInstanceDataChange(index, "instance", option)
                     }
                     styles={{
                       container: (base) => ({ ...base, width: "100%" }),
@@ -186,7 +206,7 @@ const CreateDeployment = () => {
                       label: data.isUrgent,
                     }}
                     onChange={(option) =>
-                      handleClientDataChange(index, "isUrgent", option?.value)
+                      handleInstanceDataChange(index, "isUrgent", option?.value)
                     }
                     defaultValue={{ value: "False", label: "False" }}
                     styles={{
@@ -195,11 +215,11 @@ const CreateDeployment = () => {
                     }}
                   />
                 </Box>
-                {clientData.length > 1 && (
+                {instanceData.length > 1 && (
                   <IconButton
-                    aria-label="Delete client"
+                    aria-label="Delete instance"
                     icon={<DeleteIcon />}
-                    onClick={() => handleRemoveClient(index)}
+                    onClick={() => handleRemoveInstance(index)}
                   />
                 )}
               </HStack>
@@ -208,17 +228,17 @@ const CreateDeployment = () => {
               <Button
                 leftIcon={<AddIcon />}
                 colorScheme="teal"
-                onClick={handleAddClient}
-                isDisabled={isAddClientButtonDisabled()}
+                onClick={handleAddInstance}
+                isDisabled={isAddInstanceButtonDisabled()}
                 width={180}
               >
-                Client
+                Instance
               </Button>
               <Button
                 colorScheme="blue"
                 onClick={handleCreateDeployments}
                 ml={4}
-                isDisabled={isAddClientButtonDisabled()}
+                isDisabled={isAddInstanceButtonDisabled()}
               >
                 Create Deployments
               </Button>
@@ -226,7 +246,7 @@ const CreateDeployment = () => {
           </VStack>
         )}
 
-        {clientSelection === "all" && (
+        {instanceSelection === "all" && (
           <HStack align="center" spacing={8}>
             <FormLabel minW="150px" />
             <Button

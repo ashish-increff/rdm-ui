@@ -60,6 +60,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
   );
+  const [selectedType, setSelectedType] = useState<string | null>(null);
 
   useEffect(() => {
     fetchComponents();
@@ -75,6 +76,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
       ToastManager.error("Error Loading Components", (error as Error).message);
     }
   };
+
   const fetchDeploymentGroups = async () => {
     try {
       const { request } = deploymentGroupService.getAll<DeploymentGroup>();
@@ -122,6 +124,12 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     }
   };
 
+  const handleTypeChange = (
+    value: SingleValue<{ label: string; value: string }>
+  ) => {
+    setSelectedType(value ? value.value : null);
+  };
+
   const addMoreComponents = () => {
     setSelectValues((prevSelectValues) => [
       ...prevSelectValues,
@@ -140,6 +148,7 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
     setDescriptionValue("");
     setSelectValues([{ id: 1, value1: "", value2: "" }]);
     setReleasesMap(new Map());
+    setSelectedType(null);
   };
 
   const handleSubmit = async () => {
@@ -219,18 +228,21 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                     { label: "FEATURE", value: "FEATURE" },
                     { label: "BUG_FIX", value: "BUG_FIX" },
                   ]}
+                  onChange={handleTypeChange}
                 />
               </FormControl>
-              <FormControl>
-                <FormLabel>Base Deployment Group</FormLabel>
-                <Select
-                  options={deploymentGroups.map((group) => ({
-                    value: group.name,
-                    label: group.name,
-                  }))}
-                />
-              </FormControl>
-
+              {/* Conditionally render the Base Deployment Group field */}
+              {selectedType === "BUG_FIX" && (
+                <FormControl>
+                  <FormLabel>Base Deployment Group</FormLabel>
+                  <Select
+                    options={deploymentGroups.map((group) => ({
+                      value: group.name,
+                      label: group.name,
+                    }))}
+                  />
+                </FormControl>
+              )}
               <FormControl>
                 <FormLabel>Description</FormLabel>
                 <Textarea

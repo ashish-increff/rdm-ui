@@ -8,12 +8,12 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Select,
   FormControl,
   FormLabel,
   useToast,
   Input,
   Box,
+  Select,
 } from "@chakra-ui/react";
 import componentService from "../services/component-service";
 import instanceService from "../services/instance-service";

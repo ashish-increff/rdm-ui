@@ -81,7 +81,7 @@ const DeploymentGroups = () => {
       setComponents(response.data);
 
       response.data.forEach((component) => {
-        fetchReleases(component.name);
+        fetchReleases(component.name, component.id);
       });
     } catch (error) {
       console.error(error);
@@ -89,16 +89,18 @@ const DeploymentGroups = () => {
     }
   };
 
-  const fetchReleases = async (componentName: string) => {
+  const fetchReleases = async (componentName: string, componenntId: number) => {
     try {
-      const response = await releaseService.getByComponentName<Release[]>(
-        componentName
+      const response = await releaseService.getByComponentId<Release[]>(
+        componenntId
       );
       const releases = response.data;
-      const options = releases.map((release) => ({
-        value: release.componentVersion + ": " + release.name,
-        label: release.componentVersion + ": " + release.name,
-      }));
+      const options = releases.map(
+        (release: { componentVersion: string; name: string }) => ({
+          value: release.componentVersion + ": " + release.name,
+          label: release.componentVersion + ": " + release.name,
+        })
+      );
 
       setReleaseOptions((prevOptions) => ({
         ...prevOptions,

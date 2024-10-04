@@ -67,6 +67,21 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({
     setFormData(initialFormData);
   };
 
+  const isFormValid = () => {
+    return (
+      formData.name !== "" &&
+      formData.client !== "" &&
+      formData.sqlMachineName !== "" &&
+      formData.gceBucket !== "" &&
+      formData.apiUrl !== "" &&
+      formData.urlMap !== "" &&
+      formData.authDomain !== "" &&
+      formData.projectId !== "" &&
+      formData.zoneId !== "" &&
+      formData.orgId !== ""
+    );
+  };
+
   const handleSubmit = async () => {
     try {
       await instanceService.create(formData);
@@ -155,7 +170,11 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({
           <Button colorScheme="gray" onClick={onClose} mr={3}>
             Cancel
           </Button>
-          <Button colorScheme="blue" onClick={handleSubmit}>
+          <Button
+            colorScheme="blue"
+            onClick={handleSubmit}
+            isDisabled={!isFormValid()}
+          >
             Submit
           </Button>
         </ModalFooter>
