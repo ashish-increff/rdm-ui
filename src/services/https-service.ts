@@ -108,6 +108,12 @@ class HttpService {
     url += "?objectId=" + id;
     return apiClient.get(url);
   }
+
+  seachDeploymentGroups<T>(name:string, type:string) {
+    var url = this.endpoint;
+    url += "?name=" + name + "&type=" + type;
+    return apiClient.get(url);
+  }
 }
 
 

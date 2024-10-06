@@ -57,7 +57,17 @@ const AuditLog: React.FC = () => {
     setLoading(true);
     try {
       const response = await auditService.getAudit(type, id);
-      setData(response.data);
+
+      // Sort data by timestamp in descending order
+      const sortedData = response.data.sort(
+        (a: AuditLogEntry, b: AuditLogEntry) => {
+          return (
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          );
+        }
+      );
+
+      setData(sortedData);
     } catch (error) {
       console.error(error);
       const errorMessage = handleError(error, "Error fetching audit logs");
@@ -184,7 +194,7 @@ const AuditLog: React.FC = () => {
             </Tr>
           ) : (
             data.map((entry, index) => (
-              <Tr key={index}>
+              <Tr key={index} _hover={{ bg: "gray.100" }}>
                 <Td>{entry.action}</Td>
                 <Td>{entry.actor ? entry.actor : "--"}</Td>
                 <Td>{entry.timestamp}</Td>

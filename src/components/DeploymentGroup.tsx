@@ -11,7 +11,10 @@ import {
   Td,
   Stack,
   Link,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
+import Select from "react-select";
 import { FaEdit } from "react-icons/fa";
 import deploymentGroupService from "../services/deployment-group-service";
 import DeploymentGroupModal from "./DeploymentGroupModal";
@@ -20,12 +23,14 @@ import ToastManager from "../utils/ToastManager";
 import { DeploymentGroup } from "../utils/Modal";
 import SearchByReleasedVersion from "./SearchByReleasedVersion";
 import { CustomInput, CustomTh } from "../utils/CustomComponents";
+import { handleError } from "../utils/ErrorHandler";
 
 const DeploymentGroups = () => {
   const [searchValue, setSearchValue] = useState("");
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
   );
+  const [name, setName] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchByVersion, setSearchByVersion] = useState(false);
   const [componentReleaseGroups, setComponentReleaseGroups] = useState<
@@ -39,12 +44,25 @@ const DeploymentGroups = () => {
   const openAddModal = () => setIsAddModalOpen(true);
   const closeAddModal = () => setIsAddModalOpen(false);
   const [show, setShow] = useState<{ [key: string]: boolean }>({});
-
+  const [resetKey, setResetKey] = useState(0);
   const openUpdateModal = (group: DeploymentGroup) => {
     setSelectedDeploymentGroup(group);
     setIsUpdateModalOpen(true);
     console.log("selectedDeploymentGroup", selectedDeploymentGroup?.name);
   };
+  const [status, setStatus] = useState<string | null>(null);
+
+  const statusOptions = [
+    { value: "SPRINT", label: "Sprint" },
+    { value: "FEATURE", label: "Feature" },
+    { value: "BUG_FIX", label: "Bug Fix" },
+  ];
+
+  const handleSelectChange =
+    (setter: React.Dispatch<React.SetStateAction<string | null>>) =>
+    (selectedOption: any) => {
+      setter(selectedOption ? selectedOption.value : null);
+    };
 
   const handleToggle = (
     event: React.MouseEvent<HTMLAnchorElement>,
@@ -68,43 +86,34 @@ const DeploymentGroups = () => {
   };
 
   useEffect(() => {
-    handleSubmit();
+    fetchDeploymentGroups();
   }, []);
 
-  const handleSubmit = async (type?: "release" | "name") => {
-    let name: string | null = null;
-    let releasedVersions: Record<string, string> | null = null;
-
-    if (type === "release") {
-      releasedVersions = componentReleaseGroups.reduce((acc, group) => {
-        if (group.release !== "") {
-          const componentVersion = group.release.split(":")[0].trim();
-          acc[group.component] = componentVersion;
-        }
-        return acc;
-      }, {} as Record<string, string>);
-    } else if (type === "name") {
-      name = searchValue;
-      setSearchByVersion(false);
-    }
-
+  const handleSearch = async () => {
     try {
-      const response =
-        // await deploymentGroupService.search<SearchDeploymentGroup>({
-        //   name,
-        //   releasedVersions,
-        // });
-        await deploymentGroupService.getAll<DeploymentGroup>().request;
+      const response = await deploymentGroupService.seachDeploymentGroups(
+        name || "",
+        status || ""
+      );
+      setDeploymentGroups(response.data as DeploymentGroup[]);
+      ToastManager.success("Success", "Search completed successfully.");
+    } catch (error) {
+      const errorMessage = handleError(
+        error,
+        "Error fetching Deployment Groups"
+      );
+      ToastManager.error("Error fetching Deployment Groups", errorMessage);
+    }
+  };
+
+  const fetchDeploymentGroups = async () => {
+    try {
+      const response = await deploymentGroupService.getAll<DeploymentGroup>()
+        .request;
       setDeploymentGroups(response.data || []);
-      if (type === "name" || type === "release") {
-        ToastManager.success(
-          "Success",
-          "Deployment Groups Loaded Successfully"
-        );
-      }
     } catch (error) {
       ToastManager.error(
-        "Error Searching Deployment Groups",
+        "Error Fetching Deployment Groups",
         (error as Error).message
       );
     }
@@ -125,27 +134,49 @@ const DeploymentGroups = () => {
 
   return (
     <Box padding="4" boxShadow="lg" borderRadius="md">
-      <Stack spacing={4}>
-        <Flex>
-          <CustomInput
-            placeholder="Deployment Group Name"
-            maxW="220px"
-            mr={4}
-            value={searchValue}
-            onChange={handleInputChange}
-          />
+      <Flex mb={4} alignItems="center" wrap="wrap">
+        <Flex direction="row" wrap="wrap" mb={4} gap={4}>
+          <FormControl id="name" w={{ base: "100%", md: "auto" }}>
+            <FormLabel fontWeight="bold">Name</FormLabel>
+            <CustomInput
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </FormControl>
+
+          <FormControl id="status" w="190px">
+            {" "}
+            <FormLabel fontWeight="bold">Status</FormLabel>
+            <Select
+              key={`status-${resetKey}`}
+              placeholder="Select"
+              options={statusOptions}
+              onChange={handleSelectChange(setStatus)}
+              value={
+                statusOptions.find((option) => option.value === status) ?? null
+              }
+              isClearable
+            />
+          </FormControl>
+        </Flex>
+        <Flex alignItems="center">
           <Button
             colorScheme="blue"
-            mr="15px"
-            isDisabled={!searchValue}
-            onClick={() => handleSubmit("name")}
+            onClick={handleSearch}
+            mr={4}
+            ml={4}
+            mt={3}
+            // isDisabled={searchButtonDisabled}
           >
             Search
           </Button>
-          <Button colorScheme="teal" onClick={openAddModal}>
+          <Button colorScheme="teal" onClick={openAddModal} mt={3}>
             Add Group
           </Button>
         </Flex>
+      </Flex>
+      <Stack spacing={4}>
         <Flex ml={100}>OR</Flex>
         <SearchByReleasedVersion
           checkboxLabel="Search By Released Version"
