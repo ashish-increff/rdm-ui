@@ -48,11 +48,11 @@ const DeploymentGroups = () => {
   const openUpdateModal = (group: DeploymentGroup) => {
     setSelectedDeploymentGroup(group);
     setIsUpdateModalOpen(true);
-    console.log("selectedDeploymentGroup", selectedDeploymentGroup?.name);
   };
-  const [status, setStatus] = useState<string | null>(null);
 
-  const statusOptions = [
+  const [type, setType] = useState<string | null>(null);
+
+  const typeOptions = [
     { value: "SPRINT", label: "Sprint" },
     { value: "FEATURE", label: "Feature" },
     { value: "BUG_FIX", label: "Bug Fix" },
@@ -75,11 +75,6 @@ const DeploymentGroups = () => {
     }));
   };
 
-  type OptionType = {
-    value: string;
-    label: string;
-  };
-
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     setSearchValue(newValue);
@@ -91,9 +86,9 @@ const DeploymentGroups = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await deploymentGroupService.seachDeploymentGroups(
+      const response = await deploymentGroupService.searchDeploymentGroups(
         name || "",
-        status || ""
+        type || ""
       );
       setDeploymentGroups(response.data as DeploymentGroup[]);
       ToastManager.success("Success", "Search completed successfully.");
@@ -145,16 +140,15 @@ const DeploymentGroups = () => {
             />
           </FormControl>
 
-          <FormControl id="status" w="190px">
-            {" "}
-            <FormLabel fontWeight="bold">Status</FormLabel>
+          <FormControl id="type" w="190px">
+            <FormLabel fontWeight="bold">Type</FormLabel>
             <Select
-              key={`status-${resetKey}`}
+              key={`type-${resetKey}`}
               placeholder="Select"
-              options={statusOptions}
-              onChange={handleSelectChange(setStatus)}
+              options={typeOptions}
+              onChange={handleSelectChange(setType)}
               value={
-                statusOptions.find((option) => option.value === status) ?? null
+                typeOptions.find((option) => option.value === type) ?? null
               }
               isClearable
             />
@@ -167,7 +161,6 @@ const DeploymentGroups = () => {
             mr={4}
             ml={4}
             mt={3}
-            // isDisabled={searchButtonDisabled}
           >
             Search
           </Button>
@@ -194,58 +187,65 @@ const DeploymentGroups = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {deploymentGroups.map((group) => (
-            <>
-              <Tr key={group.name} _hover={{ bg: "gray.100" }}>
-                <Td>
-                  <Link
-                    onClick={(event) => handleToggle(event, group.name)}
-                    style={{ cursor: "pointer", color: "#3182ce" }}
-                  >
-                    {group.name}
-                  </Link>
-                </Td>
-                <Td>{group.type}</Td>
-
-                <Td>{group.description ? group.description : "-"}</Td>
-
-                <Td>
-                  <FaEdit
-                    color="#4299e1"
-                    style={{ cursor: "pointer" }}
-                    title="Edit Deployment Group"
-                    size="1.5em"
-                    onClick={() => openUpdateModal(group)} // Pass the current group to the function
-                  />
-                </Td>
-              </Tr>
-              {show[group.name] && (
-                <Tr>
-                  <Td colSpan={2}>
-                    <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-                      <Table variant="simple" backgroundColor="white">
-                        <Thead>
-                          <Tr>
-                            <CustomTh>Component</CustomTh>
-                            <CustomTh>Version</CustomTh>
-                          </Tr>
-                        </Thead>
-
-                        <Tbody>
-                          {group.releaseVersions.map(({ name, version }) => (
-                            <Tr key={name} _hover={{ bg: "gray.100" }}>
-                              <Td>{name}</Td>
-                              <Td>{version ? version : "-"}</Td>
-                            </Tr>
-                          ))}
-                        </Tbody>
-                      </Table>
-                    </Box>
+          {deploymentGroups.length === 0 ? (
+            <Tr>
+              <Td colSpan={4}>No matching deployment groups found.</Td>
+            </Tr>
+          ) : (
+            deploymentGroups.map((group) => (
+              <>
+                <Tr key={group.name} _hover={{ bg: "gray.100" }}>
+                  <Td>
+                    <Link
+                      onClick={(event) => handleToggle(event, group.name)}
+                      style={{ cursor: "pointer", color: "#3182ce" }}
+                    >
+                      {group.name}
+                    </Link>
+                  </Td>
+                  <Td>{group.type}</Td>
+                  <Td>{group.description ? group.description : "-"}</Td>
+                  <Td>
+                    <FaEdit
+                      color="#4299e1"
+                      style={{ cursor: "pointer" }}
+                      title="Edit Deployment Group"
+                      size="1.5em"
+                      onClick={() => openUpdateModal(group)}
+                    />
                   </Td>
                 </Tr>
-              )}
-            </>
-          ))}
+                {show[group.name] && (
+                  <Tr>
+                    <Td colSpan={2}>
+                      <Box
+                        borderWidth="1px"
+                        borderRadius="lg"
+                        overflow="hidden"
+                      >
+                        <Table variant="simple" backgroundColor="white">
+                          <Thead>
+                            <Tr>
+                              <CustomTh>Component</CustomTh>
+                              <CustomTh>Version</CustomTh>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {group.releaseVersions.map(({ name, version }) => (
+                              <Tr key={name} _hover={{ bg: "gray.100" }}>
+                                <Td>{name}</Td>
+                                <Td>{version ? version : "-"}</Td>
+                              </Tr>
+                            ))}
+                          </Tbody>
+                        </Table>
+                      </Box>
+                    </Td>
+                  </Tr>
+                )}
+              </>
+            ))
+          )}
         </Tbody>
       </Table>
 

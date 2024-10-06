@@ -109,11 +109,21 @@ class HttpService {
     return apiClient.get(url);
   }
 
-  seachDeploymentGroups<T>(name:string, type:string) {
-    var url = this.endpoint;
-    url += "?name=" + name + "&type=" + type;
+  searchDeploymentGroups<T>(name: string, type?: string) {
+    var url = this.endpoint + "/search";
+    url += "?name=" + name;
+    if (type) {
+      url += "&type=" + type;
+    }
     return apiClient.get(url);
   }
+  
+  approveDowntime<T>(downtimeId:number, formData:any) {
+    var url = this.endpoint + "/" + downtimeId + "/approve";
+    return apiClient.put(url, formData);
+  }
+
+
 }
 
 

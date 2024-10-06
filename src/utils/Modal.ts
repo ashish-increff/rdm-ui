@@ -70,4 +70,15 @@ export interface Dependency{
   link: string;
 }
 
+export interface DowntimeData {
+  deploymentId: number;
+  requestedStartTime: string;
+  requestedEndTime: string;
+  id: number;
+  instanceName: string;
+  givenStartTime: string;
+  givenEndTime: string;
+  status: string;
+}
+
 

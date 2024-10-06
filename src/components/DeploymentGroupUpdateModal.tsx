@@ -74,6 +74,7 @@ const DeploymentGroupUpdateModal: React.FC<DeploymentGroupUpdateModalProps> = ({
   const fetchComponents = async () => {
     try {
       const { request } = componentService.getAll<Component>();
+      console.log("Test");
       const response = await request;
       setComponents(response.data);
     } catch (error) {
