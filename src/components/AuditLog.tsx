@@ -172,7 +172,13 @@ const AuditLog: React.FC = () => {
           isLoading={loading}
           colorScheme="blue"
           maxWidth={100}
-          isDisabled={!type} // Disable if no type is selected
+          isDisabled={
+            !type || // Disable if no type is selected
+            (type === "Deployment"
+              ? !entityId
+              : !entityId &&
+                !options.some((option) => option.value.toString() === entityId))
+          } // Disable if entityId is empty or entitySelect is not selected
         >
           Search
         </Button>

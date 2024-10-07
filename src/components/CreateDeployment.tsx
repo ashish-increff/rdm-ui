@@ -16,6 +16,7 @@ import Select from "react-select";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import deploymentGroupService from "../services/deployment-group-service";
 import instanceService from "../services/instance-service";
+import deploymentService from "../services/deployment-service"; // Import your deployment service
 import ToastManager from "../utils/ToastManager";
 import { DeploymentGroup, Instance } from "../utils/Modal";
 
@@ -25,12 +26,11 @@ const CreateDeployment = () => {
     []
   );
   const [instances, setInstances] = useState<Instance[]>([]);
-
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [instanceSelection, setInstanceSelection] =
     useState<string>("selected");
   const [instanceData, setInstanceData] = useState<any[]>([
-    { instance: null, scriptRequired: "True", isUrgent: "False" },
+    { instance: null, isUrgent: false },
   ]);
 
   useEffect(() => {
@@ -80,10 +80,7 @@ const CreateDeployment = () => {
   };
 
   const handleAddInstance = () => {
-    setInstanceData([
-      ...instanceData,
-      { instance: null, scriptRequired: "True", isUrgent: "False" },
-    ]);
+    setInstanceData([...instanceData, { instance: null, isUrgent: false }]);
   };
 
   const handleRemoveInstance = (index: number) => {
@@ -94,25 +91,66 @@ const CreateDeployment = () => {
 
   const isAddInstanceButtonDisabled = () => {
     return instanceData.some(
-      (data) =>
-        data.instance === null ||
-        data.scriptRequired === null ||
-        data.isUrgent === null
+      (data) => data.instance === null || data.isUrgent === null
     );
   };
 
-  const handleCreateDeployments = () => {
-    ToastManager.success(
-      "Success",
-      "Creating deployments for all instances..."
-    );
-    // Add your deployment creation logic here
+  const handleCreateDeployments = async () => {
+    if (!selectedGroup) {
+      ToastManager.error("Error", "Please select a deployment group.");
+      return;
+    }
+
+    const deploymentPayload = {
+      destinationDeploymentGroupId: parseInt(selectedGroup, 10),
+      isDeploymentRequiredForAllClients: instanceSelection === "all",
+      instanceDeploymentForms:
+        instanceSelection === "selected"
+          ? instanceData.map((data) => ({
+              instanceId: parseInt(data.instance.value, 10),
+              isUrgent: data.isUrgent,
+            }))
+          : [],
+    };
+
+    try {
+      await deploymentService.create(deploymentPayload);
+      ToastManager.success("Success", "Deployments created successfully.");
+
+      // Reset the form state
+      setSelectedGroup(null);
+      setInstanceSelection("selected");
+      setInstanceData([{ instance: null, isUrgent: false }]); // Reset instance data to initial state
+    } catch (error) {
+      ToastManager.error("Error", (error as Error).message);
+    }
   };
+
+  // Format deployment groups into the required format for react-select
+  const formattedDeploymentGroups = deploymentGroups.map((group) => ({
+    value: group.id.toString(),
+    label: group.name,
+  }));
+
+  // Format instances similarly
+  const formattedInstances = instances.map((instance) => ({
+    value: instance.id.toString(),
+    label: instance.name,
+  }));
+
+  // Get already selected instances
+  const selectedInstanceValues = instanceData
+    .filter((data) => data.instance)
+    .map((data) => data.instance.value);
+
+  // Filter out already selected instances
+  const availableInstances = formattedInstances.filter(
+    (instance) => !selectedInstanceValues.includes(instance.value)
+  );
 
   return (
     <Box padding="4" maxW="lg">
       <VStack spacing={4} align="start" w="100%">
-        {/* Upper Section with Deployment Group Select and Radio Buttons */}
         <VStack spacing={4} align="start" w="100%">
           <FormControl>
             <HStack align="center" spacing={8} w="100%">
@@ -122,11 +160,13 @@ const CreateDeployment = () => {
               <Box flex="1">
                 <Select
                   placeholder="Select Deployment Group"
-                  options={deploymentGroups.map((group) => ({
-                    value: group.name,
-                    label: group.name,
-                  }))}
+                  options={formattedDeploymentGroups}
                   onChange={handleSelectChange}
+                  value={
+                    formattedDeploymentGroups.find(
+                      (group) => group.value === selectedGroup
+                    ) || null
+                  }
                   styles={{
                     container: (base) => ({ ...base, width: "100%" }),
                     control: (base) => ({ ...base, minWidth: "300px" }),
@@ -146,8 +186,10 @@ const CreateDeployment = () => {
                   onChange={handleInstanceSelectionChange}
                   value={instanceSelection}
                 >
-                  <Stack direction="row" spacing={4}>
-                    <Radio value="selected">Selected Instances</Radio>
+                  <Stack direction="row" spacing={2}>
+                    <Radio value="selected" ml={2}>
+                      Selected Instances
+                    </Radio>
                     <Radio value="all">All Instances</Radio>
                   </Stack>
                 </RadioGroup>
@@ -156,15 +198,13 @@ const CreateDeployment = () => {
           </FormControl>
         </VStack>
 
-        {/* Lower Section with Instances, Script Required, Is Urgent */}
         {instanceSelection === "selected" && (
           <VStack align="start" w="100%">
-            {/* Headings for the select groups */}
             <HStack spacing={4} align="center" w="100%" pl="195px">
               <Box flex="2" textAlign="center">
                 <FormLabel fontWeight="bold">Instances</FormLabel>
               </Box>
-              <Box flex="1.5" textAlign="center" minWidth="400px" pl="235px">
+              <Box flex="1.5" textAlign="center" minWidth="400px" pl="220px">
                 <FormLabel fontWeight="bold">Is Urgent</FormLabel>
               </Box>
             </HStack>
@@ -180,10 +220,7 @@ const CreateDeployment = () => {
                 <Box flex="2">
                   <Select
                     placeholder="Select Instance"
-                    options={instances.map((instance) => ({
-                      value: instance.name,
-                      label: instance.name,
-                    }))}
+                    options={availableInstances} // Use filtered options
                     value={data.instance}
                     onChange={(option) =>
                       handleInstanceDataChange(index, "instance", option)
@@ -198,17 +235,16 @@ const CreateDeployment = () => {
                 <Box flex="1">
                   <Select
                     options={[
-                      { value: "True", label: "True" },
-                      { value: "False", label: "False" },
+                      { value: true, label: "True" },
+                      { value: false, label: "False" },
                     ]}
                     value={{
                       value: data.isUrgent,
-                      label: data.isUrgent,
+                      label: data.isUrgent.toString(),
                     }}
                     onChange={(option) =>
                       handleInstanceDataChange(index, "isUrgent", option?.value)
                     }
-                    defaultValue={{ value: "False", label: "False" }}
                     styles={{
                       container: (base) => ({ ...base, width: "100%" }),
                       control: (base) => ({ ...base, minWidth: "150px" }),
@@ -238,7 +274,7 @@ const CreateDeployment = () => {
                 colorScheme="blue"
                 onClick={handleCreateDeployments}
                 ml={4}
-                isDisabled={isAddInstanceButtonDisabled()}
+                isDisabled={isAddInstanceButtonDisabled() || !selectedGroup} // Disable if no group selected
               >
                 Create Deployments
               </Button>
@@ -253,6 +289,7 @@ const CreateDeployment = () => {
               flex="1"
               colorScheme="blue"
               onClick={handleCreateDeployments}
+              isDisabled={!selectedGroup} // Disable if no group selected
             >
               Create Deployments
             </Button>

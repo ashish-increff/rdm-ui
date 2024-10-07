@@ -22,8 +22,8 @@ import {
   Input,
   HStack,
   IconButton,
-  Text,
-  Spacer,
+  RadioGroup,
+  Radio,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import Select, { SingleValue } from "react-select";
@@ -31,6 +31,8 @@ import dependencyService from "../services/dependency-service";
 import deploymentGroupService from "../services/deployment-group-service";
 import ToastManager from "../utils/ToastManager";
 import { DeploymentGroup, Dependency } from "../utils/Modal";
+import { CustomTh } from "../utils/CustomComponents";
+import { handleError } from "../utils/ErrorHandler";
 
 const Dependencies = () => {
   const [searchSourceGroup, setSearchSourceGroup] = useState<string | null>(
@@ -39,23 +41,20 @@ const Dependencies = () => {
   const [searchDestinationGroup, setSearchDestinationGroup] = useState<
     string | null
   >(null);
-  const [searchDependencyType, setSearchDependencyType] = useState<
-    string | null
-  >(null);
   const [dependencies, setDependencies] = useState<Dependency[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSourceGroup, setModalSourceGroup] = useState<string | null>(null);
   const [modalDestinationGroup, setModalDestinationGroup] = useState<
     string | null
   >(null);
-  const [modalDependencyType, setModalDependencyType] = useState<string | null>(
-    null
-  );
-  const [modalLink, setModalLink] = useState<string>("");
-  const [types, setTypes] = useState([{ type: "", link: "" }]);
+  const [haveItems, setHaveItems] = useState<boolean>(false);
+  const [types, setTypes] = useState<{ type: string; link: string }[]>([
+    { type: "", link: "" },
+  ]);
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
   );
+  const [expandedRowIndex, setExpandedRowIndex] = useState<number | null>(null);
 
   const dependencyTypes = [
     { value: "PRE_MIGRATION", label: "PRE_MIGRATION" },
@@ -70,13 +69,24 @@ const Dependencies = () => {
     fetchDeploymentGroups();
   }, []);
 
-  const fetchData = async () => {
-    // try {
-    //   const response = await deploymentGroupService.search({ name: null });
-    //   setDependencies(response.data);
-    // } catch (error) {
-    //   ToastManager.error("Error loading data", (error as Error).message);
-    // }
+  const fetchData = async (
+    sourceId: string | null = null,
+    destinationId: string | null = null
+  ) => {
+    try {
+      const sourceDeploymentGroupId = sourceId ? Number(sourceId) : undefined;
+      const destinationDeploymentGroupId = destinationId
+        ? Number(destinationId)
+        : undefined;
+
+      const response = await dependencyService.searchDependency(
+        sourceDeploymentGroupId,
+        destinationDeploymentGroupId
+      );
+      setDependencies(response.data);
+    } catch (error) {
+      ToastManager.error("Error loading data", (error as Error).message);
+    }
   };
 
   const fetchDeploymentGroups = async () => {
@@ -92,7 +102,7 @@ const Dependencies = () => {
   const handleSelectChange =
     (setter: React.Dispatch<React.SetStateAction<string | null>>) =>
     (selectedOption: SingleValue<{ value: string; label: string }> | null) => {
-      setter(selectedOption?.value ?? null);
+      setter(selectedOption ? selectedOption.value : null);
     };
 
   const openAddDependencyModal = () => {
@@ -107,8 +117,7 @@ const Dependencies = () => {
   const resetModalFields = () => {
     setModalSourceGroup(null);
     setModalDestinationGroup(null);
-    setModalDependencyType(null);
-    setModalLink("");
+    setHaveItems(false);
     setTypes([{ type: "", link: "" }]);
   };
 
@@ -130,24 +139,13 @@ const Dependencies = () => {
     setTypes(types.filter((_, i) => i !== index));
   };
 
-  const getFilteredOptions = (currentIndex: number) => {
-    const selectedTypes = types
-      .map((type, idx) => (idx !== currentIndex ? type.type : null))
-      .filter((type) => type !== null);
-
-    return dependencyTypes.filter(
-      (option) => !selectedTypes.includes(option.value)
-    );
-  };
-
   const handleAddDependency = async () => {
     try {
       const newDependency = {
-        sourceDeploymentGroupName: modalSourceGroup,
-        destinationDeploymentGroupName: modalDestinationGroup,
-        dependencyType: modalDependencyType,
-        link: modalLink,
-        types: types.filter((type) => type.type && type.link),
+        sourceDeploymentGroupId: Number(modalSourceGroup),
+        destinationDeploymentGroupId: Number(modalDestinationGroup),
+        haveItems,
+        items: haveItems ? types.filter((type) => type.type && type.link) : [],
       };
 
       await dependencyService.create(newDependency);
@@ -155,21 +153,24 @@ const Dependencies = () => {
       closeAddDependencyModal();
       fetchData(); // Refresh dependencies
     } catch (error) {
-      ToastManager.error("Error adding dependency", (error as Error).message);
+      const errorMessage = handleError(error, "Error Adding Dependency");
+      ToastManager.error("Error Adding Dependency", errorMessage);
     }
   };
-
-  // Check if all required fields in the last type are filled to enable "+Type" button
-  const isAddTypeDisabled =
-    !types[types.length - 1].type || !types[types.length - 1].link;
 
   const isSubmitDisabled = !(
     modalSourceGroup &&
     modalDestinationGroup &&
-    // modalDependencyType &&
-    // modalLink &&
-    types.every((type) => type.type && type.link)
+    (haveItems ? types.every((type) => type.type && type.link) : true)
   );
+
+  const handleSearch = () => {
+    fetchData(searchSourceGroup, searchDestinationGroup);
+  };
+
+  const toggleRow = (index: number) => {
+    setExpandedRowIndex(expandedRowIndex === index ? null : index);
+  };
 
   return (
     <Box padding="4" borderRadius="md">
@@ -178,14 +179,20 @@ const Dependencies = () => {
           <FormLabel fontWeight="bold">Source Deployment Group</FormLabel>
           <Select
             options={deploymentGroups.map((group) => ({
-              value: group.name,
+              value: group.id.toString(),
               label: group.name,
             }))}
             isClearable
             onChange={handleSelectChange(setSearchSourceGroup)}
             value={
               searchSourceGroup
-                ? { value: searchSourceGroup, label: searchSourceGroup }
+                ? {
+                    value: searchSourceGroup,
+                    label:
+                      deploymentGroups.find(
+                        (group) => group.id.toString() === searchSourceGroup
+                      )?.name || "",
+                  }
                 : null
             }
           />
@@ -194,7 +201,7 @@ const Dependencies = () => {
           <FormLabel fontWeight="bold">Destination Deployment Group</FormLabel>
           <Select
             options={deploymentGroups.map((group) => ({
-              value: group.name,
+              value: group.id.toString(),
               label: group.name,
             }))}
             isClearable
@@ -203,14 +210,18 @@ const Dependencies = () => {
               searchDestinationGroup
                 ? {
                     value: searchDestinationGroup,
-                    label: searchDestinationGroup,
+                    label:
+                      deploymentGroups.find(
+                        (group) =>
+                          group.id.toString() === searchDestinationGroup
+                      )?.name || "",
                   }
                 : null
             }
           />
         </FormControl>
         <Flex alignItems="end">
-          <Button colorScheme="blue" onClick={fetchData} mr="15px">
+          <Button colorScheme="blue" onClick={handleSearch} mr="15px">
             Search
           </Button>
           <Button colorScheme="teal" onClick={openAddDependencyModal}>
@@ -222,34 +233,51 @@ const Dependencies = () => {
       <Table colorScheme="gray" mt="40px">
         <Thead backgroundColor="white">
           <Tr>
-            <Th>Source Deployment Group</Th>
-            <Th>Destination Deployment Group</Th>
-            <Th>Dependency Type</Th>
-            <Th>Link</Th>
+            <CustomTh>Source Deployment Group</CustomTh>
+            <CustomTh>Destination Deployment Group</CustomTh>
+            <CustomTh>Have Items</CustomTh>
           </Tr>
         </Thead>
         <Tbody>
           {dependencies.length === 0 ? (
             <Tr>
-              <Td colSpan={4}>No dependencies found</Td>
+              <Td colSpan={3}>No dependencies found</Td>
             </Tr>
           ) : (
             dependencies.map((dep, index) => (
-              <Tr key={index} _hover={{ bg: "gray.100" }}>
-                <Td>{dep.sourceDeploymentGroupName}</Td>
-                <Td>{dep.destinationDeploymentGroupName}</Td>
-                <Td>{dep.dependencyType}</Td>
-                <Td>
-                  <a
-                    href={dep.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "blue" }}
-                  >
-                    {dep.link.split("/").pop()}
-                  </a>
-                </Td>
-              </Tr>
+              <React.Fragment key={index}>
+                <Tr
+                  onClick={() => toggleRow(index)}
+                  _hover={{ bg: "gray.100" }}
+                  cursor="pointer"
+                >
+                  <Td>{dep.sourceDeploymentGroupName}</Td>
+                  <Td>{dep.destinationDeploymentGroupName}</Td>
+                  <Td>{dep.haveItems ? "Yes" : "No"}</Td>
+                </Tr>
+                {expandedRowIndex === index && dep.haveItems && (
+                  <Tr>
+                    <Td colSpan={3}>
+                      <Table variant="simple" colorScheme="gray">
+                        <Thead>
+                          <Tr>
+                            <CustomTh>Dependency Type</CustomTh>
+                            <CustomTh>Link</CustomTh>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {dep.items.map((item, itemIndex) => (
+                            <Tr key={itemIndex}>
+                              <Td>{item.type}</Td>
+                              <Td>{item.link}</Td>
+                            </Tr>
+                          ))}
+                        </Tbody>
+                      </Table>
+                    </Td>
+                  </Tr>
+                )}
+              </React.Fragment>
             ))
           )}
         </Tbody>
@@ -282,13 +310,20 @@ const Dependencies = () => {
                   </FormLabel>
                   <Select
                     options={deploymentGroups.map((group) => ({
-                      value: group.name,
+                      value: group.id.toString(),
                       label: group.name,
                     }))}
                     onChange={handleSelectChange(setModalSourceGroup)}
                     value={
                       modalSourceGroup
-                        ? { value: modalSourceGroup, label: modalSourceGroup }
+                        ? {
+                            value: modalSourceGroup,
+                            label:
+                              deploymentGroups.find(
+                                (group) =>
+                                  group.id.toString() === modalSourceGroup
+                              )?.name || "",
+                          }
                         : null
                     }
                   />
@@ -300,7 +335,7 @@ const Dependencies = () => {
                   </FormLabel>
                   <Select
                     options={deploymentGroups.map((group) => ({
-                      value: group.name,
+                      value: group.id.toString(),
                       label: group.name,
                     }))}
                     onChange={handleSelectChange(setModalDestinationGroup)}
@@ -308,7 +343,11 @@ const Dependencies = () => {
                       modalDestinationGroup
                         ? {
                             value: modalDestinationGroup,
-                            label: modalDestinationGroup,
+                            label:
+                              deploymentGroups.find(
+                                (group) =>
+                                  group.id.toString() === modalDestinationGroup
+                              )?.name || "",
                           }
                         : null
                     }
@@ -316,61 +355,79 @@ const Dependencies = () => {
                 </FormControl>
               </HStack>
 
-              {/* Only one label for Dependency Type and Link */}
-              <HStack mt={6} mr={7}>
-                <FormControl flex="1">
-                  <FormLabel>Dependency Type</FormLabel>
-                </FormControl>
-                <FormControl flex="1">
-                  <FormLabel>Link</FormLabel>
-                </FormControl>
-              </HStack>
+              <FormControl mb={4}>
+                <FormLabel>Items present?</FormLabel>
+                <RadioGroup
+                  onChange={(value) => setHaveItems(value === "yes")}
+                  value={haveItems ? "yes" : "no"}
+                >
+                  <HStack spacing={4}>
+                    <Radio value="yes">Yes</Radio>
+                    <Radio value="no">No</Radio>
+                  </HStack>
+                </RadioGroup>
+              </FormControl>
 
-              {types.map((type, index) => (
-                <HStack key={index} mb={4}>
-                  <FormControl flex="1">
-                    <Select
-                      options={getFilteredOptions(index)}
-                      value={
-                        type.type
-                          ? { label: type.type, value: type.type }
-                          : null
-                      }
-                      onChange={(option) =>
-                        handleTypeChange(index, "type", option?.value || "")
-                      }
-                    />
-                  </FormControl>
-                  <FormControl flex="1">
-                    <Input
-                      value={type.link}
-                      onChange={(e) =>
-                        handleTypeChange(index, "link", e.target.value)
-                      }
-                      placeholder="Enter link"
-                      ml={2}
-                      mr={2}
-                    />
-                  </FormControl>
+              {haveItems && (
+                <>
+                  <HStack mt={6} mr={7}>
+                    <FormControl flex="1">
+                      <FormLabel>Dependency Type</FormLabel>
+                    </FormControl>
+                    <FormControl flex="1">
+                      <FormLabel>Link</FormLabel>
+                    </FormControl>
+                  </HStack>
 
-                  <IconButton
-                    ml={1}
-                    aria-label="Remove type"
-                    icon={<DeleteIcon />}
-                    onClick={() => removeType(index)}
-                    isDisabled={types.length <= 1}
-                  />
-                </HStack>
-              ))}
+                  {types.map((type, index) => (
+                    <HStack key={index} mb={4}>
+                      <FormControl flex="1">
+                        <Select
+                          options={dependencyTypes}
+                          value={
+                            type.type
+                              ? { label: type.type, value: type.type }
+                              : null
+                          }
+                          onChange={(option) =>
+                            handleTypeChange(index, "type", option?.value || "")
+                          }
+                        />
+                      </FormControl>
+                      <FormControl flex="1">
+                        <Input
+                          value={type.link}
+                          onChange={(e) =>
+                            handleTypeChange(index, "link", e.target.value)
+                          }
+                          placeholder="Enter link"
+                          ml={2}
+                          mr={2}
+                        />
+                      </FormControl>
+                      <IconButton
+                        ml={1}
+                        aria-label="Remove type"
+                        icon={<DeleteIcon />}
+                        onClick={() => removeType(index)}
+                        isDisabled={types.length <= 1}
+                      />
+                    </HStack>
+                  ))}
 
-              <Button
-                leftIcon={<AddIcon />}
-                colorScheme="teal"
-                onClick={handleAddType}
-                isDisabled={isAddTypeDisabled}
-              >
-                Type
-              </Button>
+                  <Button
+                    leftIcon={<AddIcon />}
+                    colorScheme="teal"
+                    onClick={handleAddType}
+                    isDisabled={
+                      !types[types.length - 1].type ||
+                      !types[types.length - 1].link
+                    }
+                  >
+                    Type
+                  </Button>
+                </>
+              )}
             </Box>
           </ModalBody>
 

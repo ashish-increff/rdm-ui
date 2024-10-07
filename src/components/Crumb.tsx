@@ -23,7 +23,7 @@ const Crumb = () => {
     components: "Components",
     instances: "Instances",
     releases: "Releases",
-    deployments: "Deployments",
+    deployments: "Manage Deployments",
     "deployment-groups": "Deployment Groups",
     "create-deployment": "Create Deployments",
     downtime: "Downtime",

@@ -123,6 +123,22 @@ class HttpService {
     return apiClient.put(url, formData);
   }
 
+  searchDependency<T>(sourceDeploymentGroupId?: number, destinationDeploymentGroupId?:number) {
+    var url = this.endpoint ;
+    if (sourceDeploymentGroupId) {
+      url += "?sourceDeploymentGroupId=" + sourceDeploymentGroupId;
+    }
+    if(url.includes("?")){
+      url += "&";
+    }
+    else{
+      url += "?";
+    }
+    if (destinationDeploymentGroupId) {
+      url += "destinationDeploymentGroupId=" + destinationDeploymentGroupId;
+    }
+    return apiClient.get(url);
+  }
 
 }
 

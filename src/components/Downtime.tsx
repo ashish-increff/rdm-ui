@@ -22,13 +22,13 @@ import {
 } from "@chakra-ui/react";
 import { FcApprove } from "react-icons/fc";
 import instanceService from "../services/instance-service";
-import donwtimeService from "../services/donwtime-service";
 import { Instance, DowntimeData } from "../utils/Modal";
 import { handleError } from "../utils/ErrorHandler";
 import ToastManager from "../utils/ToastManager";
 import { formatISO } from "date-fns";
 import Select, { SingleValue } from "react-select";
 import { CustomTh } from "../utils/CustomComponents";
+import downtimeService from "../services/downtime-service";
 
 const Downtime = () => {
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -91,7 +91,7 @@ const Downtime = () => {
     };
 
     try {
-      const response = await donwtimeService.search(requestBody);
+      const response = await downtimeService.search(requestBody);
       setDowntimeData(response.data as DowntimeData[]);
     } catch (error) {
       const errorMessage = handleError(error, "Error searching downtime");
@@ -117,7 +117,7 @@ const Downtime = () => {
 
     if (selectedDowntime) {
       try {
-        await donwtimeService.approveDowntime(selectedDowntime.id, requestBody);
+        await downtimeService.approveDowntime(selectedDowntime.id, requestBody);
         ToastManager.success("Success", "Downtime approved successfully");
         await handleSearch(); // Refresh the data after approval
         setIsModalOpen(false); // Close the modal
@@ -188,6 +188,7 @@ const Downtime = () => {
           onClick={handleSearch}
           colorScheme="blue"
           mt={8}
+          mr={20}
           maxWidth="300px" // Set max width here
         >
           Search

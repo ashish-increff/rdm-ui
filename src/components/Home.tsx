@@ -55,10 +55,6 @@ const Home: React.FC = () => {
               icon: <FaNetworkWired color="green" />,
             },
             {
-              label: "Scripts",
-              icon: <FaFileCode color="green" />,
-            },
-            {
               label: "Dependencies",
               icon: <FaFileCode color="green" />,
             },

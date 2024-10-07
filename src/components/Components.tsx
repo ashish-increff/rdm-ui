@@ -24,6 +24,7 @@ import {
   RadioGroup,
   Stack,
   Radio,
+  ModalHeader,
 } from "@chakra-ui/react";
 import componentService from "../services/component-service";
 import ToastManager from "../utils/ToastManager";
@@ -202,42 +203,51 @@ const Components = () => {
         closeOnOverlayClick={false}
       >
         <ModalOverlay />
+
         <ModalContent>
+          <ModalHeader>
+            {modalMode === "edit" ? "Edit Component" : "Add Component"}
+          </ModalHeader>
           <ModalBody>
-            <Heading size="md" mb="4">
-              {modalMode === "edit" ? "Edit Component" : "Add Component"}
-            </Heading>
+            <Box
+              maxW="6xl"
+              mx="auto"
+              p={6}
+              borderWidth={1}
+              borderRadius="lg"
+              boxShadow="lg"
+            >
+              <VStack spacing={4} align="stretch">
+                <FormControl>
+                  <FormLabel>
+                    Component Name{" "}
+                    {modalMode === "add" && (
+                      <span style={{ color: "red" }}>*</span>
+                    )}
+                  </FormLabel>
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleFormChange}
+                    isDisabled={modalMode === "edit"}
+                    autoComplete="off"
+                  />
+                </FormControl>
 
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel>
-                  Component Name{" "}
-                  {modalMode === "add" && (
-                    <span style={{ color: "red" }}>*</span>
-                  )}
-                </FormLabel>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleFormChange}
-                  isDisabled={modalMode === "edit"}
-                  autoComplete="off"
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>
-                  POC Email <span style={{ color: "red" }}>*</span>
-                </FormLabel>
-                <Input
-                  name="pocEmail"
-                  type="email"
-                  value={formData.pocEmail}
-                  onChange={handleFormChange}
-                  autoComplete="off"
-                />
-              </FormControl>
-            </VStack>
+                <FormControl>
+                  <FormLabel>
+                    POC Email <span style={{ color: "red" }}>*</span>
+                  </FormLabel>
+                  <Input
+                    name="pocEmail"
+                    type="email"
+                    value={formData.pocEmail}
+                    onChange={handleFormChange}
+                    autoComplete="off"
+                  />
+                </FormControl>
+              </VStack>
+            </Box>
           </ModalBody>
           <ModalFooter>
             <Flex justifyContent="flex-end" mt={4}>

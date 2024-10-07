@@ -63,11 +63,15 @@ export interface Script{
   link: string;
 }
 
+export interface DependencyItems{
+  type: string;
+  link: string;
+}
 export interface Dependency{
   sourceDeploymentGroupName: string;
   destinationDeploymentGroupName: string;
-  dependencyType: string;
-  link: string;
+  haveItems: boolean;
+  items: DependencyItems[];
 }
 
 export interface DowntimeData {
