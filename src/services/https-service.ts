@@ -140,6 +140,19 @@ class HttpService {
     return apiClient.get(url);
   }
 
+  startDeployment(id: number, requestBody: any) {
+    return apiClient.post(this.endpoint + "/" + id + "/start", requestBody);
+  }
+
+  endDeployment(id: number, isSuccessful: boolean, remarks?: string) {
+    var url = this.endpoint + "/" + id + "/end";
+    url += "?isSuccessful=" + isSuccessful;
+    if (remarks) {
+      url += "&remarks=" + remarks;
+    }
+    return apiClient.post(url);
+  }
+
 }
 
 

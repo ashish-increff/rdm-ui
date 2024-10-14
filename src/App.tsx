@@ -33,7 +33,7 @@ const App: React.FC = () => {
           <Route path="/deployment-groups" element={<DeploymentGroup />} />
           <Route path="/deployments" element={<Deployment />} />
           <Route path="/scripts" element={<Scripts />} />
-          <Route path="/create-deployment" element={<CreateDeployment />} />
+          <Route path="/request-deployments" element={<CreateDeployment />} />
           <Route path="/downtime" element={<Downtime />} />
           <Route path="/dependencies" element={<Dependencies />} />
           <Route path="/audit-log" element={<AuditLog />} />

@@ -19,6 +19,7 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
+  VStack,
 } from "@chakra-ui/react";
 import { FcApprove } from "react-icons/fc";
 import instanceService from "../services/instance-service";
@@ -107,7 +108,6 @@ const Downtime = () => {
   };
 
   const handleApprove = async () => {
-    // Ensure the given times are in ISO format
     const requestBody = {
       givenStartTime: givenStartTime
         ? formatISO(new Date(givenStartTime))
@@ -128,9 +128,11 @@ const Downtime = () => {
     }
   };
 
+  const isStartButtonDisabled = !givenStartTime || !givenEndTime;
+
   return (
     <Box p={4}>
-      <SimpleGrid columns={{ base: 1, md: 6 }} spacing={4}>
+      <SimpleGrid columns={{ base: 1, md: 3, lg: 6 }} spacing={4}>
         <FormControl>
           <FormLabel>Instance</FormLabel>
           <Select
@@ -188,14 +190,13 @@ const Downtime = () => {
           onClick={handleSearch}
           colorScheme="blue"
           mt={8}
-          mr={20}
-          maxWidth="300px" // Set max width here
+          width="full" // Full width on mobile
         >
           Search
         </Button>
       </SimpleGrid>
 
-      <Box mt={10}>
+      <Box className="table-container" mt={10} overflowX="auto">
         <Table variant="simple">
           <Thead>
             <Tr>
@@ -203,12 +204,10 @@ const Downtime = () => {
               <CustomTh>Deployment ID</CustomTh>
               <CustomTh>Requested Start Time</CustomTh>
               <CustomTh>Requested End Time</CustomTh>
-
               <CustomTh>Given Start Time</CustomTh>
               <CustomTh>Given End Time</CustomTh>
-
               <CustomTh>Status</CustomTh>
-              <CustomTh>Action </CustomTh>
+              <CustomTh>Action</CustomTh>
             </Tr>
           </Thead>
           <Tbody>
@@ -223,11 +222,9 @@ const Downtime = () => {
                   <Td>{data.deploymentId}</Td>
                   <Td>{formatDateToLocal(data.requestedStartTime)}</Td>
                   <Td>{formatDateToLocal(data.requestedEndTime)}</Td>
-
                   <Td>{formatDateToLocal(data.givenStartTime)}</Td>
                   <Td>{formatDateToLocal(data.givenEndTime)}</Td>
                   <Td>{data.status}</Td>
-
                   <Td>
                     {data.status === "REQUESTED" ? (
                       <FcApprove
@@ -255,18 +252,11 @@ const Downtime = () => {
         closeOnOverlayClick={false}
       >
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent maxW={{ base: "90%", md: "600px" }}>
           <ModalHeader>Approve Downtime</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Box
-              maxW="6xl"
-              mx="auto"
-              p={6}
-              borderWidth={1}
-              borderRadius="lg"
-              boxShadow="lg"
-            >
+            <VStack spacing={4} align="stretch">
               <FormControl>
                 <FormLabel>Instance Name</FormLabel>
                 <Input value={selectedDowntime?.instanceName} isDisabled />
@@ -292,7 +282,9 @@ const Downtime = () => {
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Given Start Time</FormLabel>
+                <FormLabel>
+                  Given Start Time <span style={{ color: "red" }}>*</span>
+                </FormLabel>
                 <Input
                   type="datetime-local"
                   value={givenStartTime}
@@ -300,18 +292,25 @@ const Downtime = () => {
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Given End Time</FormLabel>
+                <FormLabel>
+                  Given End Time <span style={{ color: "red" }}>*</span>
+                </FormLabel>
                 <Input
                   type="datetime-local"
                   value={givenEndTime}
                   onChange={(e) => setGivenEndTime(e.target.value)}
                 />
               </FormControl>
-            </Box>
+            </VStack>
           </ModalBody>
           <ModalFooter>
             <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button colorScheme="blue" onClick={handleApprove} ml={3}>
+            <Button
+              colorScheme="blue"
+              onClick={handleApprove}
+              ml={3}
+              isDisabled={isStartButtonDisabled}
+            >
               Approve
             </Button>
           </ModalFooter>

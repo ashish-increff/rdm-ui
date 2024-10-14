@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   FormControl,
@@ -11,12 +11,18 @@ import {
   HStack,
   VStack,
   IconButton,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
 import Select from "react-select";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import deploymentGroupService from "../services/deployment-group-service";
 import instanceService from "../services/instance-service";
-import deploymentService from "../services/deployment-service"; // Import your deployment service
+import deploymentService from "../services/deployment-service";
 import ToastManager from "../utils/ToastManager";
 import { DeploymentGroup, Instance } from "../utils/Modal";
 
@@ -32,6 +38,8 @@ const CreateDeployment = () => {
   const [instanceData, setInstanceData] = useState<any[]>([
     { instance: null, isUrgent: false },
   ]);
+  const [isOpen, setIsOpen] = useState(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     fetchDeploymentGroups();
@@ -101,16 +109,34 @@ const CreateDeployment = () => {
       return;
     }
 
+    if (instanceSelection === "all") {
+      setIsOpen(true); // Open confirmation dialog
+      return;
+    }
+
+    await createDeployment();
+  };
+
+  const handleConfirmCreateDeployments = async () => {
+    await createDeployment(true);
+    setIsOpen(false); // Close the dialog after action
+  };
+
+  const createDeployment = async (isAllInstances = false) => {
+    if (!selectedGroup) {
+      ToastManager.error("Error", "No deployment group selected.");
+      return;
+    }
+
     const deploymentPayload = {
       destinationDeploymentGroupId: parseInt(selectedGroup, 10),
-      isDeploymentRequiredForAllClients: instanceSelection === "all",
-      instanceDeploymentForms:
-        instanceSelection === "selected"
-          ? instanceData.map((data) => ({
-              instanceId: parseInt(data.instance.value, 10),
-              isUrgent: data.isUrgent,
-            }))
-          : [],
+      isDeploymentRequiredForAllClients: isAllInstances,
+      instanceDeploymentForms: isAllInstances
+        ? []
+        : instanceData.map((data) => ({
+            instanceId: parseInt(data.instance.value, 10),
+            isUrgent: data.isUrgent,
+          })),
     };
 
     try {
@@ -120,7 +146,7 @@ const CreateDeployment = () => {
       // Reset the form state
       setSelectedGroup(null);
       setInstanceSelection("selected");
-      setInstanceData([{ instance: null, isUrgent: false }]); // Reset instance data to initial state
+      setInstanceData([{ instance: null, isUrgent: false }]);
     } catch (error) {
       ToastManager.error("Error", (error as Error).message);
     }
@@ -220,7 +246,7 @@ const CreateDeployment = () => {
                 <Box flex="2">
                   <Select
                     placeholder="Select Instance"
-                    options={availableInstances} // Use filtered options
+                    options={availableInstances}
                     value={data.instance}
                     onChange={(option) =>
                       handleInstanceDataChange(index, "instance", option)
@@ -274,7 +300,7 @@ const CreateDeployment = () => {
                 colorScheme="blue"
                 onClick={handleCreateDeployments}
                 ml={4}
-                isDisabled={isAddInstanceButtonDisabled() || !selectedGroup} // Disable if no group selected
+                isDisabled={isAddInstanceButtonDisabled() || !selectedGroup}
               >
                 Create Deployments
               </Button>
@@ -289,13 +315,45 @@ const CreateDeployment = () => {
               flex="1"
               colorScheme="blue"
               onClick={handleCreateDeployments}
-              isDisabled={!selectedGroup} // Disable if no group selected
+              isDisabled={!selectedGroup}
             >
               Create Deployments
             </Button>
           </HStack>
         )}
       </VStack>
+
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setIsOpen(false)}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirm Deployment
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure you want to create deployments for all ACTIVE
+              instances?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setIsOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="blue"
+                onClick={handleConfirmCreateDeployments}
+                ml={3}
+              >
+                Confirm
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 };

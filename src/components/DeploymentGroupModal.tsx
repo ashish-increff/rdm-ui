@@ -226,14 +226,13 @@ const DeploymentGroupModal: React.FC<DeploymentGroupModalProps> = ({
                 </FormLabel>
                 <Select
                   options={[
-                    { label: "SPRINT", value: "SPRINT" },
-                    { label: "FEATURE", value: "FEATURE" },
-                    { label: "BUG_FIX", value: "BUG_FIX" },
+                    { label: "REGULAR", value: "REGULAR" },
+                    { label: "ADHOC", value: "ADHOC" },
                   ]}
                   onChange={handleTypeChange}
                 />
               </FormControl>
-              {selectedType === "BUG_FIX" && (
+              {selectedType === "ADHOC" && (
                 <FormControl>
                   <FormLabel>Base Deployment Group</FormLabel>
                   <Select

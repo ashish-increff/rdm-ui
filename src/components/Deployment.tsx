@@ -21,7 +21,8 @@ import {
   ModalFooter,
   Text,
 } from "@chakra-ui/react";
-import { IoTimer } from "react-icons/io5";
+import { IoMdTime } from "react-icons/io";
+import { MdOutlineNotStarted } from "react-icons/md";
 import Select, { SingleValue } from "react-select";
 import instanceService from "../services/instance-service";
 import deploymentGroupService from "../services/deployment-group-service";
@@ -32,7 +33,8 @@ import { DeploymentGroup, Instance } from "../utils/Modal"; // Adjust this impor
 import deploymentService from "../services/deployment-service";
 import downtimeService from "../services/downtime-service";
 import { CustomTh } from "../utils/CustomComponents";
-
+import StartDeploymentModal from "./StartDeploymentModal";
+import EndDeploymentModal from "./EndDeploymentModal";
 const Deployment = () => {
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
@@ -57,13 +59,25 @@ const Deployment = () => {
   const [selectedDeployment, setSelectedDeployment] = useState<any>(null); // Store selected deployment for downtime request
   const [requestedStartTime, setRequestedStartTime] = useState<string>("");
   const [requestedEndTime, setRequestedEndTime] = useState<string>("");
+  const [expectedTimeInMinutes, setExpectedTimeInMinutes] =
+    useState<number>(10);
+  const [hasFetchedData, setHasFetchedData] = useState(false);
   const toast = useToast();
+  // State for StartDeploymentModal
+  const [isStartDeploymentModalOpen, setIsStartDeploymentModalOpen] =
+    useState(false);
+  const [selectedDeploymentId, setSelectedDeploymentId] = useState<
+    number | null
+  >(null);
+  const [isEndDeploymentModalOpen, setIsEndDeploymentModalOpen] =
+    useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       await fetchDeploymentGroups();
       await fetchInstances();
-      handleSearch(); // Trigger search after fetching groups and instances
+      handleSearch();
+      setHasFetchedData(true); // Trigger search after fetching groups and instances
     };
     fetchData();
   }, []);
@@ -107,7 +121,7 @@ const Deployment = () => {
         : null,
       instanceId: selectedInstance ? selectedInstance.value : null,
       isUrgent,
-      status,
+      status: status || null,
       startDownTime: startDownTime ? formatISO(new Date(startDownTime)) : null,
       endDownTime: endDownTime ? formatISO(new Date(endDownTime)) : null,
     };
@@ -115,7 +129,9 @@ const Deployment = () => {
     try {
       const response = await deploymentService.search(requestBody);
       setDeploymentData(response.data);
-      ToastManager.success("Success", "Deployment data fetched successfully");
+      if (hasFetchedData) {
+        ToastManager.success("Success", "Deployment data fetched successfully");
+      }
     } catch (error) {
       const errorMessage = handleError(error, "Error searching deployments");
       ToastManager.error("Error searching deployments", errorMessage);
@@ -126,12 +142,7 @@ const Deployment = () => {
     if (selectedDeployment) {
       const requestBody = {
         deploymentId: selectedDeployment.id,
-        requestedStartTime: requestedStartTime
-          ? formatISO(new Date(requestedStartTime))
-          : null,
-        requestedEndTime: requestedEndTime
-          ? formatISO(new Date(requestedEndTime))
-          : null,
+        expectedTimeInMinutes: expectedTimeInMinutes,
       };
 
       try {
@@ -148,7 +159,6 @@ const Deployment = () => {
     }
   };
   const statuses = [
-    { value: "CREATED", label: "CREATED" },
     { value: "MIGRATION_AWAITED", label: "MIGRATION_AWAITED" },
     { value: "READY_FOR_DOWNTIME", label: "READY_FOR_DOWNTIME" },
     { value: "DOWNTIME_REQUESTED", label: "DOWNTIME_REQUESTED" },
@@ -160,6 +170,8 @@ const Deployment = () => {
     { value: "FAILED", label: "FAILED" },
     { value: "CANCELLED", label: "CANCELLED" },
   ];
+
+  const isStartButtonDisabled = !expectedTimeInMinutes;
 
   return (
     <Box p={4}>
@@ -222,7 +234,9 @@ const Deployment = () => {
           <Select
             placeholder="Select status"
             options={statuses} // Add more options as necessary
-            value={{ value: status, label: status }}
+            value={
+              status ? { value: status, label: status } : null // Set to null when status is an empty string
+            }
             onChange={(selectedOption) =>
               setStatus(selectedOption?.value ?? "")
             }
@@ -319,7 +333,7 @@ const Deployment = () => {
                     {data.endTime ? formatDateToLocal(data.endTime) : "-"}
                   </Td>
                   <Td>
-                    <IoTimer
+                    <IoMdTime
                       color="#4299e1"
                       style={{ cursor: "pointer" }}
                       title="Request Downtime"
@@ -327,6 +341,32 @@ const Deployment = () => {
                       onClick={() => {
                         setSelectedDeployment(data);
                         setIsModalOpen(true);
+                      }}
+                    />
+                    <MdOutlineNotStarted
+                      color="green"
+                      style={{ cursor: "pointer" }}
+                      title="Start Deployment"
+                      size="1.7em"
+                      onClick={() => {
+                        setIsStartDeploymentModalOpen(true);
+                        setSelectedDeployment(data);
+                        setSelectedDeploymentId(
+                          selectedInstance?.value || null
+                        ); // Set the ID for the selected instance
+                      }}
+                    />
+                    <MdOutlineNotStarted
+                      color="red"
+                      style={{ cursor: "pointer" }}
+                      title="End Deployment"
+                      size="1.7em"
+                      onClick={() => {
+                        setIsEndDeploymentModalOpen(true);
+                        setSelectedDeployment(data);
+                        setSelectedDeploymentId(
+                          selectedInstance?.value || null
+                        ); // Set the ID for the selected instance
                       }}
                     />
                   </Td>
@@ -361,19 +401,13 @@ const Deployment = () => {
                 <Input value={selectedDeployment?.id} isDisabled />
               </FormControl>
               <FormControl mb={4}>
-                <FormLabel>Requested Start Time</FormLabel>
+                <FormLabel>
+                  Expected Time in minutes
+                  <span style={{ color: "red" }}>*</span>
+                </FormLabel>
                 <Input
-                  type="datetime-local"
-                  value={requestedStartTime}
-                  onChange={(e) => setRequestedStartTime(e.target.value)}
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>Requested End Time</FormLabel>
-                <Input
-                  type="datetime-local"
-                  value={requestedEndTime}
-                  onChange={(e) => setRequestedEndTime(e.target.value)}
+                  value={expectedTimeInMinutes}
+                  onChange={(e) => setExpectedTimeInMinutes(+e.target.value)}
                 />
               </FormControl>
             </Box>
@@ -382,12 +416,36 @@ const Deployment = () => {
             <Button onClick={() => setIsModalOpen(false)} mr={3}>
               Close
             </Button>
-            <Button onClick={handleDowntimeRequest} colorScheme="blue">
+            <Button
+              onClick={handleDowntimeRequest}
+              colorScheme="blue"
+              isDisabled={isStartButtonDisabled}
+            >
               Submit
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
+      {/* Start Deployment Modal */}
+      <StartDeploymentModal
+        isOpen={isStartDeploymentModalOpen}
+        onClose={() => setIsStartDeploymentModalOpen(false)}
+        id={selectedDeployment?.id} // Pass the selected deployment ID
+        instance={selectedDeployment?.instanceName} // Pass the selected instance name
+        destinationDeploymentGroup={
+          selectedDeployment?.destinationDeploymentGroupName
+        }
+      />
+      {/* End Deployment Modal */}
+      <EndDeploymentModal
+        isOpen={isEndDeploymentModalOpen}
+        onClose={() => setIsEndDeploymentModalOpen(false)}
+        id={selectedDeployment?.id} // Pass the selected deployment ID
+        instance={selectedDeployment?.instanceName} // Pass the selected instance name
+        destinationDeploymentGroup={
+          selectedDeployment?.destinationDeploymentGroupName
+        } // You may need to adjust this based on your logic
+      />
     </Box>
   );
 };

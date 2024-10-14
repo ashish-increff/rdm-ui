@@ -65,7 +65,7 @@ const Home: React.FC = () => {
           title="Deployment"
           items={[
             {
-              label: "Create Deployments",
+              label: "Request Deployments",
               icon: <FaPlusCircle color="#3182ce" />,
             },
             { label: "Manage Deployments", icon: <FaTasks color="#3182ce" /> },
@@ -106,8 +106,8 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     if (label === "Deployment Groups") {
       navigate("/deployment-groups");
     }
-    if (label === "Create Deployments") {
-      navigate("/create-deployment");
+    if (label === "Request Deployments") {
+      navigate("/request-deployments");
     }
     if (label === "Manage Deployments") {
       navigate("/deployments");

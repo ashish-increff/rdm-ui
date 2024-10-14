@@ -55,6 +55,7 @@ const DeploymentGroupUpdateModal: React.FC<DeploymentGroupUpdateModalProps> = ({
     { id: 1, componentId: 0, releaseId: 0 },
   ]);
   const [descriptionValue, setDescriptionValue] = useState(description);
+  const [tag, setTagValue] = useState("");
   const [components, setComponents] = useState<Component[]>([]);
   const [releasesMap, setReleasesMap] = useState<Map<number, Release[]>>(
     new Map()
@@ -164,6 +165,7 @@ const DeploymentGroupUpdateModal: React.FC<DeploymentGroupUpdateModalProps> = ({
       name, // Use the name prop directly here
       description: descriptionValue,
       releaseIds,
+      tag,
     };
 
     try {
@@ -213,7 +215,13 @@ const DeploymentGroupUpdateModal: React.FC<DeploymentGroupUpdateModalProps> = ({
                   autoComplete="off"
                 />
               </FormControl>
-
+              <FormControl>
+                <FormLabel>Tag</FormLabel>
+                <Input
+                  value={tag}
+                  onChange={(e) => setTagValue(e.target.value)}
+                />
+              </FormControl>
               <FormControl>
                 <FormLabel>
                   Components{" "}
