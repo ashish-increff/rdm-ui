@@ -218,7 +218,7 @@ const Instances = () => {
               onChange={(e) => setName(e.target.value)}
             />
           </FormControl>
-          {/* <FormControl
+          <FormControl
             id="liveDeploymentGroup"
             w={{ base: "100%", md: "auto" }}
           >
@@ -228,7 +228,7 @@ const Instances = () => {
               value={liveDeploymentGroup}
               onChange={(e) => setLiveDeploymentGroup(e.target.value)}
             />
-          </FormControl> */}
+          </FormControl>
           <FormControl id="deploymentOnHold" w="190px">
             <FormLabel fontWeight="bold">Deployment On Hold</FormLabel>
             <Select
@@ -327,6 +327,8 @@ const Instances = () => {
             <Tr>
               <CustomTh>Name</CustomTh>
               <CustomTh>Client</CustomTh>
+              <CustomTh>Live Deployment Group</CustomTh>
+              <CustomTh>Deployment Group Tag</CustomTh>
               <CustomTh>Primary POC</CustomTh>
               <CustomTh>Secondary POC</CustomTh>
               <CustomTh>Deployment On Hold</CustomTh>
@@ -357,6 +359,16 @@ const Instances = () => {
                       </Link>
                     </Td>
                     <Td>{instance.client}</Td>
+                    <Td>
+                      {instance.liveDeploymentGroup
+                        ? instance.liveDeploymentGroup
+                        : "-"}
+                    </Td>
+                    <Td>
+                      {instance.deploymentGroupTag
+                        ? instance.deploymentGroupTag
+                        : "-"}
+                    </Td>
                     <Td>
                       <Tooltip label={instance.primaryPocEmail} placement="top">
                         <span>{instance.primaryPocName}</span>

@@ -28,6 +28,8 @@ export interface Instance {
     zoneId: string;
     orgId: string;
     status: string;
+    liveDeploymentGroup: string;
+    deploymentGroupTag: string;
 
     componentVersions:ComponentVersion[];
   }
@@ -76,8 +78,7 @@ export interface Dependency{
 
 export interface DowntimeData {
   deploymentId: number;
-  requestedStartTime: string;
-  requestedEndTime: string;
+  expectedTimeInMinutes:number
   id: number;
   instanceName: string;
   givenStartTime: string;

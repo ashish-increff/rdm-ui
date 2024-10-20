@@ -21,6 +21,7 @@ import {
   FaFileCode,
   FaPlusCircle,
   FaTasks,
+  FaHistory,
 } from "react-icons/fa";
 
 interface Item {
@@ -69,6 +70,10 @@ const Home: React.FC = () => {
               icon: <FaPlusCircle color="#3182ce" />,
             },
             { label: "Manage Deployments", icon: <FaTasks color="#3182ce" /> },
+            {
+              label: "Deployment History",
+              icon: <FaHistory color="#3182ce" />,
+            },
           ]}
           color="#3182ce"
         />
@@ -111,6 +116,9 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
     }
     if (label === "Manage Deployments") {
       navigate("/deployments");
+    }
+    if (label === "Deployment History") {
+      navigate("/deployment-history");
     }
     if (label === "Scripts") {
       navigate("/scripts");

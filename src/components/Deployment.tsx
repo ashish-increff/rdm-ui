@@ -79,6 +79,7 @@ const Deployment = () => {
       handleSearch();
       setHasFetchedData(true); // Trigger search after fetching groups and instances
     };
+
     fetchData();
   }, []);
 
@@ -166,9 +167,6 @@ const Deployment = () => {
     { value: "DOWNTIME_BREACHED", label: "DOWNTIME_BREACHED" },
     { value: "ON_HOLD", label: "ON_HOLD" },
     { value: "PROCESSING", label: "PROCESSING" },
-    { value: "COMPLETED", label: "COMPLETED" },
-    { value: "FAILED", label: "FAILED" },
-    { value: "CANCELLED", label: "CANCELLED" },
   ];
 
   const isStartButtonDisabled = !expectedTimeInMinutes;
@@ -333,42 +331,52 @@ const Deployment = () => {
                     {data.endTime ? formatDateToLocal(data.endTime) : "-"}
                   </Td>
                   <Td>
-                    <IoMdTime
-                      color="#4299e1"
-                      style={{ cursor: "pointer" }}
-                      title="Request Downtime"
-                      size="1.7em"
-                      onClick={() => {
-                        setSelectedDeployment(data);
-                        setIsModalOpen(true);
-                      }}
-                    />
-                    <MdOutlineNotStarted
-                      color="green"
-                      style={{ cursor: "pointer" }}
-                      title="Start Deployment"
-                      size="1.7em"
-                      onClick={() => {
-                        setIsStartDeploymentModalOpen(true);
-                        setSelectedDeployment(data);
-                        setSelectedDeploymentId(
-                          selectedInstance?.value || null
-                        ); // Set the ID for the selected instance
-                      }}
-                    />
-                    <MdOutlineNotStarted
-                      color="red"
-                      style={{ cursor: "pointer" }}
-                      title="End Deployment"
-                      size="1.7em"
-                      onClick={() => {
-                        setIsEndDeploymentModalOpen(true);
-                        setSelectedDeployment(data);
-                        setSelectedDeploymentId(
-                          selectedInstance?.value || null
-                        ); // Set the ID for the selected instance
-                      }}
-                    />
+                    {data.status === "READY_FOR_DOWNTIME" && (
+                      <IoMdTime
+                        color="#4299e1"
+                        style={{ cursor: "pointer" }}
+                        title="Request Downtime"
+                        size="1.7em"
+                        onClick={() => {
+                          setSelectedDeployment(data);
+                          setIsModalOpen(true);
+                        }}
+                      />
+                    )}
+                    {data.status === "READY_FOR_DEPLOYMENT" && (
+                      <MdOutlineNotStarted
+                        color="green"
+                        style={{ cursor: "pointer" }}
+                        title="Start Deployment"
+                        size="1.7em"
+                        onClick={() => {
+                          setIsStartDeploymentModalOpen(true);
+                          setSelectedDeployment(data);
+                          setSelectedDeploymentId(
+                            selectedInstance?.value || null
+                          );
+                        }}
+                      />
+                    )}
+                    {data.status === "PROCESSING" && (
+                      <MdOutlineNotStarted
+                        color="red"
+                        style={{ cursor: "pointer" }}
+                        title="End Deployment"
+                        size="1.7em"
+                        onClick={() => {
+                          setIsEndDeploymentModalOpen(true);
+                          setSelectedDeployment(data);
+                          setSelectedDeploymentId(
+                            selectedInstance?.value || null
+                          );
+                        }}
+                      />
+                    )}
+                    {data.status !== "READY_FOR_DOWNTIME" &&
+                      data.status !== "READY_FOR_DEPLOYMENT" &&
+                      data.status !== "PROCESSING" &&
+                      "-"}
                   </Td>
                 </Tr>
               ))

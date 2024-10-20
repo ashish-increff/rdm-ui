@@ -38,8 +38,6 @@ const Downtime = () => {
     value: number;
     label: string;
   }> | null>(null);
-  const [requestedStartTime, setRequestedStartTime] = useState<string>("");
-  const [requestedEndTime, setRequestedEndTime] = useState<string>("");
   const [status, setStatus] = useState<string>("REQUESTED");
   const [deploymentId, setDeploymentId] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -81,12 +79,6 @@ const Downtime = () => {
   const handleSearch = async () => {
     const requestBody = {
       instanceId: selectedInstance ? selectedInstance.value : null,
-      requestedStartTime: requestedStartTime
-        ? formatISO(new Date(requestedStartTime))
-        : null,
-      requestedEndTime: requestedEndTime
-        ? formatISO(new Date(requestedEndTime))
-        : null,
       status: status || null,
       deploymentId: deploymentId || null,
     };
@@ -147,24 +139,6 @@ const Downtime = () => {
         </FormControl>
 
         <FormControl>
-          <FormLabel>Requested Start Time</FormLabel>
-          <Input
-            type="datetime-local"
-            value={requestedStartTime}
-            onChange={(e) => setRequestedStartTime(e.target.value)}
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Requested End Time</FormLabel>
-          <Input
-            type="datetime-local"
-            value={requestedEndTime}
-            onChange={(e) => setRequestedEndTime(e.target.value)}
-          />
-        </FormControl>
-
-        <FormControl>
           <FormLabel>Status</FormLabel>
           <Select
             placeholder="Select status"
@@ -202,8 +176,7 @@ const Downtime = () => {
             <Tr>
               <CustomTh>Instance Name</CustomTh>
               <CustomTh>Deployment ID</CustomTh>
-              <CustomTh>Requested Start Time</CustomTh>
-              <CustomTh>Requested End Time</CustomTh>
+              <CustomTh>Expected Time(min)</CustomTh>
               <CustomTh>Given Start Time</CustomTh>
               <CustomTh>Given End Time</CustomTh>
               <CustomTh>Status</CustomTh>
@@ -220,8 +193,7 @@ const Downtime = () => {
                 <Tr key={data.id} _hover={{ bg: "gray.100" }}>
                   <Td>{data.instanceName}</Td>
                   <Td>{data.deploymentId}</Td>
-                  <Td>{formatDateToLocal(data.requestedStartTime)}</Td>
-                  <Td>{formatDateToLocal(data.requestedEndTime)}</Td>
+                  <Td>{data.expectedTimeInMinutes}</Td>
                   <Td>{formatDateToLocal(data.givenStartTime)}</Td>
                   <Td>{formatDateToLocal(data.givenEndTime)}</Td>
                   <Td>{data.status}</Td>
@@ -256,52 +228,52 @@ const Downtime = () => {
           <ModalHeader>Approve Downtime</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel>Instance Name</FormLabel>
-                <Input value={selectedDowntime?.instanceName} isDisabled />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Deployment ID</FormLabel>
-                <Input value={selectedDowntime?.deploymentId} isDisabled />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Requested Start Time</FormLabel>
-                <Input
-                  value={formatDateToLocal(
-                    selectedDowntime?.requestedStartTime
-                  )}
-                  isDisabled
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Requested End Time</FormLabel>
-                <Input
-                  value={formatDateToLocal(selectedDowntime?.requestedEndTime)}
-                  isDisabled
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>
-                  Given Start Time <span style={{ color: "red" }}>*</span>
-                </FormLabel>
-                <Input
-                  type="datetime-local"
-                  value={givenStartTime}
-                  onChange={(e) => setGivenStartTime(e.target.value)}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>
-                  Given End Time <span style={{ color: "red" }}>*</span>
-                </FormLabel>
-                <Input
-                  type="datetime-local"
-                  value={givenEndTime}
-                  onChange={(e) => setGivenEndTime(e.target.value)}
-                />
-              </FormControl>
-            </VStack>
+            <Box
+              maxW="6xl"
+              mx="auto"
+              p={6}
+              borderWidth={1}
+              borderRadius="lg"
+              boxShadow="lg"
+            >
+              <VStack spacing={4} align="stretch">
+                <FormControl>
+                  <FormLabel>Instance Name</FormLabel>
+                  <Input value={selectedDowntime?.instanceName} isDisabled />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Deployment ID</FormLabel>
+                  <Input value={selectedDowntime?.deploymentId} isDisabled />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Expected Time(min)</FormLabel>
+                  <Input
+                    value={selectedDowntime?.expectedTimeInMinutes}
+                    isDisabled
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>
+                    Given Start Time <span style={{ color: "red" }}>*</span>
+                  </FormLabel>
+                  <Input
+                    type="datetime-local"
+                    value={givenStartTime}
+                    onChange={(e) => setGivenStartTime(e.target.value)}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>
+                    Given End Time <span style={{ color: "red" }}>*</span>
+                  </FormLabel>
+                  <Input
+                    type="datetime-local"
+                    value={givenEndTime}
+                    onChange={(e) => setGivenEndTime(e.target.value)}
+                  />
+                </FormControl>
+              </VStack>
+            </Box>
           </ModalBody>
           <ModalFooter>
             <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>

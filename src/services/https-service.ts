@@ -40,6 +40,10 @@ class HttpService {
   search<T>(entity: T) {
     return apiClient.post(this.endpoint + "/search", entity);
   }
+
+  history<T>(entity: T) {
+    return apiClient.post(this.endpoint + "/history", entity);
+  }
   searchByComponent<T>(entity: T) {
     return apiClient.post(this.endpoint + "/search-by-component", entity);
   }

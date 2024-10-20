@@ -148,6 +148,7 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({
                         key.charAt(0).toUpperCase() + key.slice(1)
                       }`}
                       type={key.includes("Email") ? "email" : "text"}
+                      autoComplete="off"
                     />
                   </FormControl>
                 ))}

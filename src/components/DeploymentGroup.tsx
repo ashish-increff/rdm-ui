@@ -53,9 +53,8 @@ const DeploymentGroups = () => {
   const [type, setType] = useState<string | null>(null);
 
   const typeOptions = [
-    { value: "SPRINT", label: "Sprint" },
-    { value: "FEATURE", label: "Feature" },
-    { value: "BUG_FIX", label: "Bug Fix" },
+    { value: "REGULAR", label: "REGULAR" },
+    { value: "ADHOC", label: "ADHOC" },
   ];
 
   const handleSelectChange =

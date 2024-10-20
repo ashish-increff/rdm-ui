@@ -162,6 +162,7 @@ const UpdateInstanceDetailsModal: React.FC<UpdateInstanceDetailsModalProps> = ({
                           key.charAt(0).toUpperCase() + key.slice(1)
                         }`}
                         type="text"
+                        autoComplete="off"
                       />
                     </FormControl>
                     {index + 1 < Object.keys(formData).length && (
