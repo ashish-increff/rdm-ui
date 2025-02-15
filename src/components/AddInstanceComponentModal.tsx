@@ -137,7 +137,7 @@ const AddInstanceComponentModal: React.FC<AddInstanceComponentModalProps> = ({
                 >
                   {getAvailableComponents(index).map((component) => (
                     <option key={component.id} value={component.id}>
-                      {component.name}
+                      {component.name + ", " + component.type}
                     </option>
                   ))}
                 </Select>

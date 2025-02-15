@@ -3,10 +3,15 @@ export interface Component {
     name: string;
     pocName: string;
     pocEmail: string;
+    type: string;
+    artifactId: string;
+    groupId: string;
+    propertyFileName: string;
   }
  export interface ComponentVersion {
   releaseId: number;
     name: string;
+    type: string;
     version: string;
   } 
 
@@ -30,6 +35,8 @@ export interface Instance {
     status: string;
     liveDeploymentGroup: string;
     deploymentGroupTag: string;
+    latestDeploymentGroupTag: string;
+    nextDeploymentGroup: string;
 
     componentVersions:ComponentVersion[];
   }
@@ -50,6 +57,13 @@ export interface DeploymentGroup{
     releaseIds: number[];
     type: string| null;
     baseDeploymentGroupId: number | null;
+    releaseVersions:ComponentVersion[];
+  }
+
+  export interface Tag{
+    id: number;
+    deploymentGroupId: number;
+    tag: string;
     releaseVersions:ComponentVersion[];
   }
 

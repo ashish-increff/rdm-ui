@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Box,
-  VStack,
-  SimpleGrid,
-  Heading,
-  Text,
-  Center,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, VStack, Heading, Text, Center, Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
   FaTools,
@@ -25,7 +17,7 @@ import {
 } from "react-icons/fa";
 
 interface Item {
-  label: string;
+  label: JSX.Element; // Keep as JSX.Element for multi-line support
   icon: JSX.Element;
 }
 
@@ -42,22 +34,37 @@ const Home: React.FC = () => {
         <Section
           title="Masters"
           items={[
-            { label: "Components", icon: <FaTools color="red.400" /> },
-            { label: "Instances", icon: <FaUserFriends color="red.400" /> },
+            {
+              label: <Text>Components</Text>,
+              icon: <FaTools color="red.400" />,
+            },
+            {
+              label: <Text>Instances</Text>,
+              icon: <FaUserFriends color="red.400" />,
+            },
           ]}
           color="red.400"
         />
         <Section
           title="Release Management"
           items={[
-            { label: "Releases", icon: <FaRocket color="green" /> },
+            { label: <Text>Releases</Text>, icon: <FaRocket color="green" /> },
             {
-              label: "Deployment Groups",
+              label: <Text>Deployment Groups</Text>,
               icon: <FaNetworkWired color="green" />,
             },
             {
-              label: "Dependencies",
+              label: <Text>Dependencies</Text>,
               icon: <FaFileCode color="green" />,
+            },
+            {
+              label: (
+                <>
+                  <Text textAlign="center">Deployment</Text>
+                  <Text textAlign="center">Group History</Text>
+                </>
+              ),
+              icon: <FaShippingFast color="green" />,
             },
           ]}
           color="green.500"
@@ -66,12 +73,15 @@ const Home: React.FC = () => {
           title="Deployment"
           items={[
             {
-              label: "Request Deployments",
+              label: <Text>Request Deployments</Text>,
               icon: <FaPlusCircle color="#3182ce" />,
             },
-            { label: "Manage Deployments", icon: <FaTasks color="#3182ce" /> },
             {
-              label: "Deployment History",
+              label: <Text>Manage Deployments</Text>,
+              icon: <FaTasks color="#3182ce" />,
+            },
+            {
+              label: <Text>Deployment History</Text>,
               icon: <FaHistory color="#3182ce" />,
             },
           ]}
@@ -79,14 +89,22 @@ const Home: React.FC = () => {
         />
         <Section
           title="Downtime"
-          items={[{ label: "Downtime", icon: <FaClock color="purple" /> }]}
+          items={[
+            { label: <Text>Downtime</Text>, icon: <FaClock color="purple" /> },
+          ]}
           color="purple.500"
         />
         <Section
           title="Admin"
           items={[
-            { label: "Manage Users", icon: <FaUserCog color="orange" /> },
-            { label: "Audit Log", icon: <FaFileAlt color="orange" /> },
+            {
+              label: <Text>Manage Users</Text>,
+              icon: <FaUserCog color="orange" />,
+            },
+            {
+              label: <Text>Audit Log</Text>,
+              icon: <FaFileAlt color="orange" />,
+            },
           ]}
           color="orange.500"
         />
@@ -98,41 +116,55 @@ const Home: React.FC = () => {
 const Section: React.FC<SectionProps> = ({ title, items, color }) => {
   const navigate = useNavigate();
 
-  const handleItemClick = (label: string) => {
-    if (label === "Components") {
-      navigate("/components");
+  const handleItemClick = (label: JSX.Element) => {
+    // Extract text correctly for both single and multi-line labels
+    const labelText = React.Children.map(label.props.children, (child) =>
+      typeof child === "string" ? child : child.props.children
+    )
+      .join(" ")
+      .trim();
+
+    switch (labelText) {
+      case "Components":
+        navigate("/components");
+        break;
+      case "Instances":
+        navigate("/instances");
+        break;
+      case "Releases":
+        navigate("/releases");
+        break;
+      case "Deployment Groups":
+        navigate("/deployment-groups");
+        break;
+      case "Request Deployments":
+        navigate("/request-deployments");
+        break;
+      case "Manage Deployments":
+        navigate("/deployments");
+        break;
+      case "Deployment History":
+        navigate("/deployment-history");
+        break;
+      case "Dependencies":
+        navigate("/dependencies");
+        break;
+      case "Deployment Group History":
+        navigate("/deployment-group-history");
+        break;
+      case "Downtime":
+        navigate("/downtime");
+        break;
+      case "Audit Log":
+        navigate("/audit-log");
+        break;
+      case "Manage Users":
+        navigate("/manage-users");
+        break;
+      default:
+        console.warn(`No route found for: ${labelText}`);
+        break;
     }
-    if (label === "Instances") {
-      navigate("/instances");
-    }
-    if (label === "Releases") {
-      navigate("/releases");
-    }
-    if (label === "Deployment Groups") {
-      navigate("/deployment-groups");
-    }
-    if (label === "Request Deployments") {
-      navigate("/request-deployments");
-    }
-    if (label === "Manage Deployments") {
-      navigate("/deployments");
-    }
-    if (label === "Deployment History") {
-      navigate("/deployment-history");
-    }
-    if (label === "Scripts") {
-      navigate("/scripts");
-    }
-    if (label === "Dependencies") {
-      navigate("/dependencies");
-    }
-    if (label === "Downtime") {
-      navigate("/downtime");
-    }
-    if (label == "Audit Log") {
-      navigate("/audit-log");
-    }
-    // Add more routes here if needed
   };
 
   return (
@@ -141,10 +173,10 @@ const Section: React.FC<SectionProps> = ({ title, items, color }) => {
         {title}
       </Heading>
       <Flex direction="row" wrap="wrap" justify="flex-start">
-        {items.map((item, index: number) => (
+        {items.map((item, index) => (
           <Center
             key={index}
-            width="190px" // Ensure width and height are the same
+            width="190px"
             height="160px"
             borderRadius="md"
             border="1px solid"

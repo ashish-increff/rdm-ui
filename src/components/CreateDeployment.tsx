@@ -27,11 +27,11 @@ import ToastManager from "../utils/ToastManager";
 import { DeploymentGroup, Instance } from "../utils/Modal";
 
 const CreateDeployment = () => {
-  const theme = useTheme();
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
     []
   );
   const [instances, setInstances] = useState<Instance[]>([]);
+  const [eligibleInstances, setEligibleInstances] = useState<Instance[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [instanceSelection, setInstanceSelection] =
     useState<string>("selected");
@@ -45,6 +45,12 @@ const CreateDeployment = () => {
     fetchDeploymentGroups();
     fetchInstances();
   }, []);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchEligibleInstances(selectedGroup);
+    }
+  }, [selectedGroup]);
 
   const fetchDeploymentGroups = async () => {
     try {
@@ -66,6 +72,34 @@ const CreateDeployment = () => {
       setInstances(response.data);
     } catch (error) {
       ToastManager.error("Error loading instances", (error as Error).message);
+    }
+  };
+
+  const fetchEligibleInstances = async (deploymentGroupId: string) => {
+    try {
+      const response = await instanceService.getEligibleInstances<Instance[]>(
+        deploymentGroupId
+      );
+
+      let formattedInstances;
+      if (response.data.length === 0) {
+        // Set default values if response data is empty
+        formattedInstances = [{ instance: null, isUrgent: false }];
+      } else {
+        // Format instances if response data is not empty
+        formattedInstances = response.data.map((instance: Instance) => ({
+          instance: { value: instance.id.toString(), label: instance.name },
+          isUrgent: false,
+        }));
+      }
+
+      setInstanceData(formattedInstances);
+      setEligibleInstances(response.data);
+    } catch (error) {
+      ToastManager.error(
+        "Error loading eligible instances",
+        (error as Error).message
+      );
     }
   };
 

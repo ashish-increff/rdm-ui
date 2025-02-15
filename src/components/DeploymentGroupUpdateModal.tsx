@@ -26,6 +26,7 @@ import releaseService from "../services/release-service";
 import ToastManager from "../utils/ToastManager";
 import { Component, Release, ComponentVersion } from "../utils/Modal";
 import deploymentGroupService from "../services/deployment-group-service";
+import { handleError } from "../utils/ErrorHandler";
 
 interface SelectGroup {
   id: number;
@@ -174,10 +175,11 @@ const DeploymentGroupUpdateModal: React.FC<DeploymentGroupUpdateModalProps> = ({
       resetForm();
       onClose();
     } catch (error) {
-      ToastManager.error(
-        "Error updating Deployment Group",
-        (error as Error).message
+      const errorMessage = handleError(
+        error,
+        "Error Updating Deployment Group"
       );
+      ToastManager.error("Error Updating Deployment Group", errorMessage);
     }
   };
 

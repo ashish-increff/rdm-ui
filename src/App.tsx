@@ -15,6 +15,7 @@ import Downtime from "./components/Downtime";
 import Dependencies from "./components/Dependencies";
 import AuditLog from "./components/AuditLog";
 import DeploymentHistory from "./components/DeploymentHistory";
+import DeploymentGroupHistory from "./components/DeploymentGroupHistory";
 const App: React.FC = () => {
   return (
     <>
@@ -38,6 +39,10 @@ const App: React.FC = () => {
           <Route path="/downtime" element={<Downtime />} />
           <Route path="/dependencies" element={<Dependencies />} />
           <Route path="/audit-log" element={<AuditLog />} />
+          <Route
+            path="/deployment-group-history"
+            element={<DeploymentGroupHistory />}
+          />
         </Routes>
       </Box>
     </>

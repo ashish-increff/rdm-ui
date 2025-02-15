@@ -157,6 +157,14 @@ class HttpService {
     return apiClient.post(url);
   }
 
+  getEligibleInstances<T>(groupId: string) {
+    return apiClient.get(this.endpoint + "/eligible-instances/" + groupId);
+  }
+
+  getTagHistory<T>(groupId: string) {
+    return apiClient.get(this.endpoint  + "/"+ groupId + "/tag-history");
+  }
+
 }
 
 

@@ -329,6 +329,8 @@ const Instances = () => {
               <CustomTh>Client</CustomTh>
               <CustomTh>Live Deployment Group</CustomTh>
               <CustomTh>Deployment Group Tag</CustomTh>
+              <CustomTh>Latest Deployment Group Tag </CustomTh>
+              <CustomTh>Next Deployment Group</CustomTh>
               <CustomTh>Primary POC</CustomTh>
               <CustomTh>Secondary POC</CustomTh>
               <CustomTh>Deployment On Hold</CustomTh>
@@ -367,6 +369,18 @@ const Instances = () => {
                     <Td>
                       {instance.deploymentGroupTag
                         ? instance.deploymentGroupTag
+                        : "-"}
+                    </Td>
+                    <Td>
+                      {instance.latestDeploymentGroupTag &&
+                      instance.latestDeploymentGroupTag !==
+                        instance.deploymentGroupTag
+                        ? instance.latestDeploymentGroupTag
+                        : "-"}
+                    </Td>
+                    <Td>
+                      {instance.nextDeploymentGroup
+                        ? instance.nextDeploymentGroup
                         : "-"}
                     </Td>
                     <Td>
@@ -413,7 +427,7 @@ const Instances = () => {
                   </Tr>
                   {show[instance.name] && (
                     <Tr>
-                      <Td colSpan={8}>
+                      <Td colSpan={5}>
                         <Box
                           borderWidth="1px"
                           borderRadius="lg"
@@ -423,14 +437,16 @@ const Instances = () => {
                             <Thead>
                               <Tr>
                                 <CustomTh>Component</CustomTh>
+                                <CustomTh>Type</CustomTh>
                                 <CustomTh>Version</CustomTh>
                               </Tr>
                             </Thead>
                             <Tbody>
                               {instance.componentVersions.map(
-                                ({ name, version }) => (
+                                ({ name, type, version }) => (
                                   <Tr key={name} _hover={{ bg: "gray.100" }}>
                                     <Td>{name}</Td>
+                                    <Td>{type}</Td>
                                     <Td>{version ? version : "-"}</Td>
                                   </Tr>
                                 )

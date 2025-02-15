@@ -25,12 +25,14 @@ import {
   Stack,
   Radio,
   ModalHeader,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import componentService from "../services/component-service";
 import ToastManager from "../utils/ToastManager";
 import { Component } from "../utils/Modal";
 import { handleError } from "../utils/ErrorHandler";
 import { FaUserEdit } from "react-icons/fa";
+import { CustomTh } from "../utils/CustomComponents";
 
 const Components = () => {
   const [components, setComponents] = useState<Component[]>([]);
@@ -43,12 +45,10 @@ const Components = () => {
   const [formData, setFormData] = useState({
     name: "",
     pocEmail: "",
-    id: 0,
-  });
-
-  const [addComponentForm, setAddComponentForm] = useState({
-    name: "",
-    pocEmail: "",
+    type: "UI", // default type
+    artifactId: "",
+    groupId: "",
+    propertyFileName: "",
   });
 
   useEffect(() => {
@@ -78,13 +78,19 @@ const Components = () => {
       setFormData({
         name: component.name,
         pocEmail: component.pocEmail || "",
-        id: component.id,
+        type: "UI",
+        artifactId: "",
+        groupId: "",
+        propertyFileName: "",
       });
     } else {
       setFormData({
         name: "",
         pocEmail: "",
-        id: 0,
+        type: "UI",
+        artifactId: "",
+        groupId: "",
+        propertyFileName: "",
       });
       setSelectedComponent(null);
     }
@@ -93,23 +99,25 @@ const Components = () => {
 
   const handleModalClose = () => setIsModalOpen(false);
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
     try {
       if (modalMode === "edit" && selectedComponent) {
-        await componentService.updateComponent(formData.id, formData.pocEmail);
+        // Update only the POC email for editing
+        await componentService.updateComponent(
+          selectedComponent.id,
+          formData.pocEmail
+        );
         ToastManager.success(
           "Component Updated",
           "Successfully updated the component."
         );
       } else {
-        setAddComponentForm({
-          name: formData.name,
-          pocEmail: formData.pocEmail,
-        });
         await componentService.create(formData);
         ToastManager.success(
           "Component Added",
@@ -126,10 +134,12 @@ const Components = () => {
 
   // Function to check if form data is valid
   const isFormValid = () => {
+    const { name, pocEmail, artifactId, groupId, propertyFileName, type } =
+      formData;
     if (modalMode === "add") {
-      return formData.name && formData.pocEmail;
+      return name && pocEmail && artifactId && groupId && propertyFileName;
     } else if (modalMode === "edit") {
-      return formData.pocEmail;
+      return pocEmail; // Only POC email is required in edit mode
     }
     return false;
   };
@@ -153,36 +163,37 @@ const Components = () => {
           Add Component
         </Button>
       </HStack>
-      <Table colorScheme="gray" maxW={700} mt={10}>
+      <Table colorScheme="gray" mt={10}>
         <Thead backgroundColor="white">
           <Tr>
-            <Th boxShadow="md" fontWeight="bold">
-              Name
-            </Th>
-            <Th boxShadow="md" fontWeight="bold">
-              POC Name
-            </Th>
-
-            <Th boxShadow="md" fontWeight="bold">
-              Action
-            </Th>
+            <CustomTh>Name</CustomTh>
+            <CustomTh>Type</CustomTh>
+            <CustomTh>Artifact ID</CustomTh>
+            <CustomTh>Group ID</CustomTh>
+            <CustomTh>Property File Name</CustomTh>
+            {/* <CustomTh>POC Name</CustomTh> */}
+            {/* <CustomTh>Action</CustomTh> */}
           </Tr>
         </Thead>
         <Tbody>
           {filteredComponents.length === 0 ? (
             <Tr>
-              <Td colSpan={5}>No matching Component Found</Td>
+              <Td colSpan={3}>No matching Component Found</Td>
             </Tr>
           ) : (
             filteredComponents.map((component, index) => (
               <Tr key={index} _hover={{ bg: "gray.100" }}>
                 <Td>{component.name}</Td>
-                <Td>
+                <Td>{component.type}</Td>
+                <Td>{component.artifactId}</Td>
+                <Td>{component.groupId}</Td>
+                <Td>{component.propertyFileName}</Td>
+                {/* <Td>
                   <Tooltip label={component.pocEmail} placement="top">
                     {component.pocName}
                   </Tooltip>
-                </Td>
-                <Td>
+                </Td> */}
+                {/* <Td>
                   <FaUserEdit
                     color="#4299e1"
                     style={{ cursor: "pointer" }}
@@ -190,7 +201,7 @@ const Components = () => {
                     size="1.5em"
                     onClick={() => handleModalOpen("edit", component)}
                   />
-                </Td>
+                </Td> */}
               </Tr>
             ))
           )}
@@ -203,11 +214,11 @@ const Components = () => {
         closeOnOverlayClick={false}
       >
         <ModalOverlay />
-
         <ModalContent>
           <ModalHeader>
             {modalMode === "edit" ? "Edit Component" : "Add Component"}
           </ModalHeader>
+          <ModalCloseButton />
           <ModalBody>
             <Box
               maxW="6xl"
@@ -218,26 +229,19 @@ const Components = () => {
               boxShadow="lg"
             >
               <VStack spacing={4} align="stretch">
-                <FormControl>
-                  <FormLabel>
-                    Component Name{" "}
-                    {modalMode === "add" && (
-                      <span style={{ color: "red" }}>*</span>
-                    )}
-                  </FormLabel>
+                <FormControl isRequired>
+                  <FormLabel>Name</FormLabel>
                   <Input
                     name="name"
                     value={formData.name}
                     onChange={handleFormChange}
-                    isDisabled={modalMode === "edit"}
                     autoComplete="off"
+                    isDisabled={modalMode === "edit"} // Disable name field in edit mode
                   />
                 </FormControl>
 
-                <FormControl>
-                  <FormLabel>
-                    POC Email <span style={{ color: "red" }}>*</span>
-                  </FormLabel>
+                <FormControl isRequired>
+                  <FormLabel>POC Email</FormLabel>
                   <Input
                     name="pocEmail"
                     type="email"
@@ -246,6 +250,56 @@ const Components = () => {
                     autoComplete="off"
                   />
                 </FormControl>
+
+                {modalMode === "add" && (
+                  <>
+                    <FormControl isRequired>
+                      <FormLabel>Type</FormLabel>
+                      <RadioGroup
+                        name="type"
+                        value={formData.type}
+                        onChange={(value) =>
+                          setFormData({ ...formData, type: value })
+                        }
+                      >
+                        <Stack direction="row">
+                          <Radio value="UI">UI</Radio>
+                          <Radio value="Backend">Backend</Radio>
+                        </Stack>
+                      </RadioGroup>
+                    </FormControl>
+
+                    <FormControl isRequired>
+                      <FormLabel>Artifact ID</FormLabel>
+                      <Input
+                        name="artifactId"
+                        value={formData.artifactId}
+                        onChange={handleFormChange}
+                        autoComplete="off"
+                      />
+                    </FormControl>
+
+                    <FormControl isRequired>
+                      <FormLabel>Group ID</FormLabel>
+                      <Input
+                        name="groupId"
+                        value={formData.groupId}
+                        onChange={handleFormChange}
+                        autoComplete="off"
+                      />
+                    </FormControl>
+
+                    <FormControl isRequired>
+                      <FormLabel>Property File Name</FormLabel>
+                      <Input
+                        name="propertyFileName"
+                        value={formData.propertyFileName}
+                        onChange={handleFormChange}
+                        autoComplete="off"
+                      />
+                    </FormControl>
+                  </>
+                )}
               </VStack>
             </Box>
           </ModalBody>

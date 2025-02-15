@@ -122,17 +122,26 @@ const Releases = () => {
           <Select
             value={
               selectedComponent
-                ? {
-                    label: components.find((c) => c.id === selectedComponent)
-                      ?.name,
-                    value: selectedComponent,
-                  }
-                : null
+                ? (() => {
+                    const selectedComponentObj = components.find(
+                      (c) => c.id === selectedComponent
+                    );
+                    return selectedComponentObj
+                      ? {
+                          label: `${selectedComponentObj.name}, ${selectedComponentObj.type}`,
+                          value: selectedComponent,
+                        }
+                      : undefined;
+                  })()
+                : undefined
             }
             onChange={(
               option: SingleValue<{ label: string | undefined; value: number }>
             ) => setSelectedComponent(option ? option.value : null)}
-            options={components.map((c) => ({ label: c.name, value: c.id }))}
+            options={components.map((c) => ({
+              label: `${c.name}, ${c.type}`,
+              value: c.id,
+            }))}
           />
         </FormControl>
       </HStack>

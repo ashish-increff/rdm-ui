@@ -165,7 +165,6 @@ const Deployment = () => {
     { value: "DOWNTIME_REQUESTED", label: "DOWNTIME_REQUESTED" },
     { value: "READY_FOR_DEPLOYMENT", label: "READY_FOR_DEPLOYMENT" },
     { value: "DOWNTIME_BREACHED", label: "DOWNTIME_BREACHED" },
-    { value: "ON_HOLD", label: "ON_HOLD" },
     { value: "PROCESSING", label: "PROCESSING" },
   ];
 

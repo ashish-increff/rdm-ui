@@ -13,8 +13,10 @@ import {
   Tr,
   Td,
   Text,
+  Flex,
 } from "@chakra-ui/react";
 import Select, { SingleValue } from "react-select";
+import { FaCloudDownloadAlt } from "react-icons/fa";
 import instanceService from "../services/instance-service";
 import deploymentGroupService from "../services/deployment-group-service";
 import { handleError } from "../utils/ErrorHandler";
@@ -24,6 +26,7 @@ import { DeploymentGroup, Instance } from "../utils/Modal";
 import deploymentService from "../services/deployment-service";
 import downtimeService from "../services/downtime-service";
 import { CustomTh } from "../utils/CustomComponents";
+import Papa from "papaparse"; // Import the CSV library
 
 const DeploymentHistory = () => {
   const [deploymentGroups, setDeploymentGroups] = useState<DeploymentGroup[]>(
@@ -54,18 +57,20 @@ const DeploymentHistory = () => {
       handleSearch();
       setHasFetchedData(true);
     };
+
     const now = new Date();
     const startDefault = new Date(now);
     startDefault.setHours(startDefault.getHours() - 720);
     const endDefault = new Date(now);
     endDefault.setHours(endDefault.getHours());
+
     const formatDateToLocalInput = (date: Date) => {
-      // Convert to local time by getting the local offset
       const localDate = new Date(
         date.getTime() - date.getTimezoneOffset() * 60000
       );
       return localDate.toISOString().slice(0, 16); // Format to 'YYYY-MM-DDTHH:MM'
     };
+
     setStartDate(formatDateToLocalInput(startDefault));
     setEndDate(formatDateToLocalInput(endDefault));
     fetchData();
@@ -119,6 +124,29 @@ const DeploymentHistory = () => {
       const errorMessage = handleError(error, "Error searching deployments");
       ToastManager.error("Error searching deployments", errorMessage);
     }
+  };
+
+  const downloadCSV = () => {
+    const csvData = deploymentData.map((data) => ({
+      ID: data.id,
+      Instance: data.instanceName,
+      "Source Deployment Group": data.sourceDeploymentGroupName || "-",
+      "Destination Deployment Group": data.destinationDeploymentGroupName,
+      Status: data.status,
+      "Start Time": data.startTime
+        ? new Date(data.startTime).toLocaleString()
+        : "-",
+      "End Time": data.endTime ? new Date(data.endTime).toLocaleString() : "-",
+    }));
+
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `Deployment_History.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const statuses = [
@@ -209,13 +237,22 @@ const DeploymentHistory = () => {
       </SimpleGrid>
 
       <Box mt={10}>
-        <Box mb={4} textAlign="right">
+        <Flex mb={4} justifyContent="flex-end" alignItems="center">
           Showing{" "}
-          <Text as="span" fontWeight="bold" fontSize="2xl">
+          <Text as="span" fontWeight="bold" fontSize="2xl" mx={2}>
             {deploymentData.length}
           </Text>{" "}
           {deploymentData.length === 1 ? "result" : "results"}
-        </Box>
+          {deploymentData.length > 0 && (
+            <FaCloudDownloadAlt
+              color="#4299e1"
+              style={{ cursor: "pointer", marginLeft: "8px" }}
+              title="Download CSV"
+              size="1.5em"
+              onClick={downloadCSV}
+            />
+          )}
+        </Flex>
         <Table variant="simple">
           <Thead>
             <Tr>

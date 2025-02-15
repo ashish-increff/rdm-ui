@@ -226,16 +226,23 @@ const DeploymentGroups = () => {
                           <Thead>
                             <Tr>
                               <CustomTh>Component</CustomTh>
+                              <CustomTh>Type</CustomTh>
                               <CustomTh>Version</CustomTh>
                             </Tr>
                           </Thead>
                           <Tbody>
-                            {group.releaseVersions.map(({ name, version }) => (
-                              <Tr key={name} _hover={{ bg: "gray.100" }}>
-                                <Td>{name}</Td>
-                                <Td>{version ? version : "-"}</Td>
-                              </Tr>
-                            ))}
+                            {group.releaseVersions.map(
+                              ({ name, type, version }) => (
+                                <Tr
+                                  key={`${name}-${type}`}
+                                  _hover={{ bg: "gray.100" }}
+                                >
+                                  <Td>{name}</Td>
+                                  <Td>{type}</Td>
+                                  <Td>{version ? version : "-"}</Td>
+                                </Tr>
+                              )
+                            )}
                           </Tbody>
                         </Table>
                       </Box>

@@ -27,6 +27,7 @@ const Crumb = () => {
     "deployment-groups": "Deployment Groups",
     "request-deployments": "Request Deployments",
     "deployment-history": "Deployment History",
+    "deployment-group-history": "Deployment Group History",
     downtime: "Downtime",
     scripts: "Scripts",
     dependencies: "Dependencies",
